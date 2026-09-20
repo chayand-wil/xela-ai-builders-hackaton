@@ -28,23 +28,25 @@ def test_catalogs_loading(catalogs: Catalogs) -> None:
 
 def test_guatemala_prefix_normalization(catalogs: Catalogs) -> None:
     """Verifica que el prefijo '00-' de Guatemala se normalice a '01-' y el municipio sea '0101'."""
-    raw_df = pl.DataFrame({
-        "Año": [2024, 2024],
-        "CodEstablecimiento": ["00-18-0001-43", "00-01-0002-42"],
-        "Departamento_F": [1, 1],
-        "Depto_mupio": [101, 101],
-        "Sector": [1, 2],
-        "Área": [1, 2],
-        "Sexo": [1, 2],
-        "Grado": [1, 2],
-        "Nivel": [2, 1],
-        "Pueblo_Per": [1, 5],
-        "Plan_Est": [1, 1],
-        "Jornada_Est": [1, 1],
-        "Resultado_F": [1, 1],
-        "Repitente": [2, 2],
-        "Graduando": [2, 2],
-    })
+    raw_df = pl.DataFrame(
+        {
+            "Año": [2024, 2024],
+            "CodEstablecimiento": ["00-18-0001-43", "00-01-0002-42"],
+            "Departamento_F": [1, 1],
+            "Depto_mupio": [101, 101],
+            "Sector": [1, 2],
+            "Área": [1, 2],
+            "Sexo": [1, 2],
+            "Grado": [1, 2],
+            "Nivel": [2, 1],
+            "Pueblo_Per": [1, 5],
+            "Plan_Est": [1, 1],
+            "Jornada_Est": [1, 1],
+            "Resultado_F": [1, 1],
+            "Repitente": [2, 2],
+            "Graduando": [2, 2],
+        }
+    )
 
     cleaned = clean_department_df(raw_df, catalogs)
 
@@ -58,23 +60,25 @@ def test_guatemala_prefix_normalization(catalogs: Catalogs) -> None:
 
 def test_standard_municipality_derivation(catalogs: Catalogs) -> None:
     """Verifica que para otros departamentos el municipio se derive de los segmentos 1 y 2."""
-    raw_df = pl.DataFrame({
-        "Año": [2024],
-        "CodEstablecimiento": ["09-01-0005-43"],
-        "Departamento_F": [9],
-        "Depto_mupio": [901],
-        "Sector": [1],
-        "Área": [1],
-        "Sexo": [1],
-        "Grado": [3],
-        "Nivel": [2],
-        "Pueblo_Per": [1],
-        "Plan_Est": [1],
-        "Jornada_Est": [1],
-        "Resultado_F": [1],
-        "Repitente": [2],
-        "Graduando": [2],
-    })
+    raw_df = pl.DataFrame(
+        {
+            "Año": [2024],
+            "CodEstablecimiento": ["09-01-0005-43"],
+            "Departamento_F": [9],
+            "Depto_mupio": [901],
+            "Sector": [1],
+            "Área": [1],
+            "Sexo": [1],
+            "Grado": [3],
+            "Nivel": [2],
+            "Pueblo_Per": [1],
+            "Plan_Est": [1],
+            "Jornada_Est": [1],
+            "Resultado_F": [1],
+            "Repitente": [2],
+            "Graduando": [2],
+        }
+    )
 
     cleaned = clean_department_df(raw_df, catalogs)
 
@@ -94,23 +98,25 @@ def test_solola_sheet_detection() -> None:
 
 def test_code_9_preservation(catalogs: Catalogs) -> None:
     """Verifica que el código 9 se conserve como 'Ignorado' y nunca como null."""
-    raw_df = pl.DataFrame({
-        "Año": [2024],
-        "CodEstablecimiento": ["01-02-0001-43"],
-        "Departamento_F": [1],
-        "Depto_mupio": [102],
-        "Sector": [1],
-        "Área": [9],
-        "Sexo": [9],
-        "Grado": [1],
-        "Nivel": [9],
-        "Pueblo_Per": [9],
-        "Plan_Est": [1],
-        "Jornada_Est": [9],
-        "Resultado_F": [9],
-        "Repitente": [9],
-        "Graduando": [9],
-    })
+    raw_df = pl.DataFrame(
+        {
+            "Año": [2024],
+            "CodEstablecimiento": ["01-02-0001-43"],
+            "Departamento_F": [1],
+            "Depto_mupio": [102],
+            "Sector": [1],
+            "Área": [9],
+            "Sexo": [9],
+            "Grado": [1],
+            "Nivel": [9],
+            "Pueblo_Per": [9],
+            "Plan_Est": [1],
+            "Jornada_Est": [9],
+            "Resultado_F": [9],
+            "Repitente": [9],
+            "Graduando": [9],
+        }
+    )
 
     cleaned = clean_department_df(raw_df, catalogs)
 
@@ -128,23 +134,25 @@ def test_code_9_preservation(catalogs: Catalogs) -> None:
 
 def test_schema_integrity(catalogs: Catalogs) -> None:
     """Verifica que las 17 columnas contractuales estén presentes y ordenadas."""
-    raw_df = pl.DataFrame({
-        "Año": [2024],
-        "CodEstablecimiento": ["01-01-0001-43"],
-        "Departamento_F": [1],
-        "Depto_mupio": [101],
-        "Sector": [1],
-        "Área": [1],
-        "Sexo": [1],
-        "Grado": [1],
-        "Nivel": [2],
-        "Pueblo_Per": [5],
-        "Plan_Est": [1],
-        "Jornada_Est": [1],
-        "Resultado_F": [1],
-        "Repitente": [2],
-        "Graduando": [2],
-    })
+    raw_df = pl.DataFrame(
+        {
+            "Año": [2024],
+            "CodEstablecimiento": ["01-01-0001-43"],
+            "Departamento_F": [1],
+            "Depto_mupio": [101],
+            "Sector": [1],
+            "Área": [1],
+            "Sexo": [1],
+            "Grado": [1],
+            "Nivel": [2],
+            "Pueblo_Per": [5],
+            "Plan_Est": [1],
+            "Jornada_Est": [1],
+            "Resultado_F": [1],
+            "Repitente": [2],
+            "Graduando": [2],
+        }
+    )
 
     cleaned = clean_department_df(raw_df, catalogs)
     assert cleaned.columns == FINAL_COLUMNS

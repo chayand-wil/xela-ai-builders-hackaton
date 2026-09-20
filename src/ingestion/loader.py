@@ -153,9 +153,7 @@ def load_department_file(file_path: Path) -> pl.DataFrame:
     # 1. Validación de esquema
     missing_cols = set(EXPECTED_COLUMNS) - set(df.columns)
     if missing_cols:
-        raise ValueError(
-            f"El archivo {file_path.name} no cumple el contrato de columnas. Faltan: {missing_cols}"
-        )
+        raise ValueError(f"El archivo {file_path.name} no cumple el contrato de columnas. Faltan: {missing_cols}")
 
     # 2. Validación de conteo esperado por departamento
     dept_key = get_department_key(file_path)

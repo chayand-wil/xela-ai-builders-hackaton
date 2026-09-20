@@ -79,7 +79,7 @@ def run_pipeline(
         total_raw_rows += len(raw_df)
         cleaned_df = clean_department_df(raw_df, catalogs)
         cleaned_dfs.append(cleaned_df)
-        logger.debug(f"Procesado {f.name}: {len(cleaned_df):,} filas en {time.time()-t_file:.2f}s")
+        logger.debug(f"Procesado {f.name}: {len(cleaned_df):,} filas en {time.time() - t_file:.2f}s")
 
     # 4. Concatenación masiva
     logger.info("Concatenando registros departamentales...")
@@ -145,7 +145,7 @@ def run_pipeline(
     logger.info(f"Muestra guardada: {len(sample_df):,} registros.")
 
     elapsed = time.time() - start_time
-    logger.info(f"Pipeline completado exitosamente en {elapsed:.2f} segundos ({elapsed/60:.2f} minutos).")
+    logger.info(f"Pipeline completado exitosamente en {elapsed:.2f} segundos ({elapsed / 60:.2f} minutos).")
 
 
 def main() -> None:

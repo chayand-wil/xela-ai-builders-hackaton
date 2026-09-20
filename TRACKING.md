@@ -8,13 +8,13 @@
 
 | Métrica | Estado |
 |---|---|
-| **Progreso General Estimado** | **35%** |
+| **Progreso General Estimado** | **55%** |
 | **Puntaje Objetivo** | **100 / 100 puntos** |
 | **Dataset Base Procesado** | **4,298,887 registros** (100% del censo escolar 2024) |
 | **Última Actualización** | 2026-09-20 |
 
 ```
-[██████████░░░░░░░░░░░░░░░░░░] 35% Completado
+[████████████████░░░░░░░░░░░░] 55% Completado
 ```
 
 ---
@@ -25,8 +25,8 @@
 |:---:|---|---|:---:|
 | **Fase 0** | **Setup & Auditoría** | Entorno virtual, dependencias, auditoría de 23 archivos | ✅ **100% Completado** |
 | **Fase 1** | **Ingesta & ETL** | Extracción, decodificación, limpieza `00-`, validación Parquet | ✅ **100% Completado** |
-| **Fase 2** | **Motor Analítico** | Consultas DuckDB, centralización de fórmulas de indicadores | 🔄 **Siguiente Fase** |
-| **Fase 3** | **Dashboard** | Streamlit + Plotly, vista general y territorial, análisis escrito | ⏳ **Pendiente** |
+| **Fase 2** | **Motor Analítico** | Consultas DuckDB, centralización de fórmulas de indicadores | ✅ **100% Completado** |
+| **Fase 3** | **Dashboard** | Streamlit + Plotly, vista general y territorial, análisis escrito | 🔄 **Siguiente Fase** |
 | **Fase 4** | **Agente con IA** | Agente conversacional LLM sin alucinación de cifras | ⏳ **Pendiente** |
 | **Fase 5** | **Entrega & Pitch** | 2 Videos (Arquitectura y Demo), README final y pitch de 5 min | ⏳ **Pendiente** |
 
@@ -76,21 +76,26 @@
 
 ---
 
-### 🔄 Fase 2: Motor Analítico y Capa de Consultas DuckDB (0% — Próximo Paso)
-- [ ] **Configuración de DuckDB:** Conexión eficiente sobre `educacion_formal_2024.parquet`.
-- [ ] **Módulo de Consultas (`src/analytics/queries.py`):**
-  - [ ] Filtros parametrizados seguros (por departamento, municipio, sector, área, nivel, sexo).
-  - [ ] Consultas agregadas con retorno instantáneo (< 50 ms).
-- [ ] **Módulo de Fórmulas e Indicadores (`src/analytics/indicators.py`):**
-  - [ ] Fórmula estandarizada de **Tasa de Promoción**: Promovidos / (Promovidos + No promovidos + Retirados).
-  - [ ] Fórmula de **Tasa de No Promoción**: No promovidos / (Promovidos + No promovidos + Retirados).
-  - [ ] Fórmula de **Tasa de Retiro**: (Retirado + Retirado definitivo) / (Promovidos + No promovidos + Retirados).
-  - [ ] Manejo explícito de `Vigente` e `Ignorado` fuera del denominador de tasas.
-  - [ ] Cálculo de rankings territoriales (top/bottom de municipios o departamentos).
-- [ ] **Generador de Narrativas Automáticas (`src/analytics/narratives.py`):**
-  - [ ] Textos deterministas que explican en lenguaje sencillo qué significa cada cifra (mayor valor, menor valor, brechas).
-- [ ] **Pruebas Unitarias (`tests/test_analytics.py`):**
-  - [ ] Validación de cálculo manual de tasas sobre la muestra de datos.
+### ✅ Fase 2: Motor Analítico y Capa de Consultas DuckDB (100%)
+- [x] **Configuración de DuckDB:** Conexión in-memory directa y ultrarrápida sobre `educacion_formal_2024.parquet` (< 50ms).
+- [x] **Módulo de Consultas (`src/analytics/queries.py`):**
+  - [x] Filtros parametrizados seguros contra inyecciones SQL.
+  - [x] KPIs oficiales con métricas terminales y desgloses.
+  - [x] Agregaciones por dimensión (`nivel`, `sector`, `area`, `sexo`, `pueblo`).
+  - [x] Rankings de los 22 departamentos por matrícula y tasas.
+  - [x] Desgloses municipales completos (los 340 municipios disponibles).
+  - [x] Tabulación cruzada bidimensional (`sector` × `area`, etc.).
+- [x] **Módulo de Fórmulas e Indicadores (`src/analytics/indicators.py`):**
+  - [x] Fórmulas oficiales implementadas (Promoción: 85.28%, No promoción: 9.19%, Retiro: 5.53%).
+  - [x] Exclusión explícita de `Vigente` e `Ignorado` del denominador terminal (ADR-004).
+  - [x] Modelos Pydantic (`KPISummary`, `MetricResult`) para contratos tipados.
+- [x] **Generador de Narrativas Automáticas (`src/analytics/narratives.py`):**
+  - [x] Explicaciones deterministas de KPIs en lenguaje accesible.
+  - [x] Análisis comparativo de rankings (detección de extremos y brechas porcentuales).
+  - [x] Análisis interpretativo de desgloses por nivel y dimensión.
+- [x] **Pruebas y Calidad:**
+  - [x] 8/8 pruebas unitarias aprobadas en `tests/test_analytics.py` (total suite: 14/14 tests PASS).
+  - [x] 100% código aprobado por el linter `ruff`.
 
 ---
 
