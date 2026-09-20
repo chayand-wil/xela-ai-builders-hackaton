@@ -7,6 +7,8 @@ import os
 import re
 from typing import Any
 
+from dotenv import load_dotenv
+
 from src.agent.guardrails import fold
 from src.agent.schemas import AgentQuery
 from src.analytics.queries import FILTER_KEYS
@@ -51,6 +53,8 @@ Reglas:
 - Retiro combina Retirado + Retirado definitivo (withdrawal_rate).
 - Si piden el departamento con más inscripciones: ranking, group_by=department, rank_metric=enrollment_count.
 """
+
+load_dotenv()
 
 
 def _catalog_pairs(values: list[str]) -> list[tuple[str, str]]:
@@ -239,29 +243,46 @@ def interpret_demo(question: str, previous_query: AgentQuery | None = None) -> A
     return AgentQuery(metric="enrollment_count", filters=filters)
 
 
-def _openai_enabled() -> bool:
-    return bool(os.getenv("OPENAI_API_KEY", "").strip())
+def _llm_config() -> tuple[str, str, str] | None:
+    groq_key = os.getenv("GROQ_API_KEY", "").strip()
+    if groq_key:
+        return (
+            groq_key,
+            os.getenv("GROQ_BASE_URL", "https://api.groq.com/openai/v1"),
+            os.getenv("GROQ_MODEL", "openai/gpt-oss-20b"),
+        )
+    openai_key = os.getenv("OPENAI_API_KEY", "").strip()
+    if openai_key:
+        return openai_key, os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1"), os.getenv(
+            "OPENAI_MODEL", "gpt-4o-mini"
+        )
+    return None
 
 
-def interpret_openai(question: str) -> AgentQuery:
+def language_provider() -> str:
+    config = _llm_config()
+    if config is None:
+        return "Intérprete local"
+    return "Groq" if "groq.com" in config[1] else "OpenAI"
+
+
+def interpret_llm(question: str, previous_query: AgentQuery | None = None) -> AgentQuery:
     from openai import OpenAI
 
-    client = OpenAI()
-    model = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
-    schema = AgentQuery.model_json_schema()
+    config = _llm_config()
+    if config is None:
+        raise RuntimeError("No hay proveedor de lenguaje configurado.")
+    api_key, base_url, model = config
+    client = OpenAI(api_key=api_key, base_url=base_url)
+    context = ""
+    if previous_query is not None:
+        context = f"\nConsulta anterior para resolver seguimientos: {previous_query.model_dump_json()}"
     completion = client.chat.completions.create(
         model=model,
         temperature=0,
-        response_format={
-            "type": "json_schema",
-            "json_schema": {
-                "name": "agent_query",
-                "strict": False,
-                "schema": schema,
-            },
-        },
+        response_format={"type": "json_object"},
         messages=[
-            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "system", "content": SYSTEM_PROMPT + context},
             {"role": "user", "content": question},
         ],
     )
@@ -273,9 +294,9 @@ def interpret_openai(question: str) -> AgentQuery:
 
 
 def interpret(question: str, previous_query: AgentQuery | None = None) -> AgentQuery:
-    if _openai_enabled():
+    if _llm_config() is not None:
         try:
-            return interpret_openai(question)
+            return interpret_llm(question, previous_query)
         except Exception:
             return interpret_demo(question, previous_query)
     return interpret_demo(question, previous_query)

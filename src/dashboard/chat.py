@@ -72,8 +72,10 @@ def _render_answer(payload: Any, message_index: int = 0) -> None:
     if used_filters:
         st.caption(active_filters_text(used_filters if isinstance(used_filters, dict) else to_mapping(used_filters)))
     provider = result_get(payload, "provider", default=None)
+    language_provider = result_get(payload, "language_provider", default=None)
     if provider:
-        st.caption(f"Motor de respuesta: {provider}.")
+        prefix = f"Interpretación: {language_provider} · " if language_provider else ""
+        st.caption(f"{prefix}Cálculo: {provider}.")
     if result:
         with st.expander("¿Cómo se calculó y qué significa?"):
             st.write(denominator_caption(result))

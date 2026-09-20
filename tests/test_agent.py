@@ -14,6 +14,7 @@ from tests.test_indicators import write_tiny_parquet
 @pytest.fixture
 def demo_agent(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> AnalyticsService:
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.delenv("GROQ_API_KEY", raising=False)
     monkeypatch.setenv("ENABLE_WREN", "false")
     parquet = write_tiny_parquet(tmp_path / "tiny.parquet")
     service = AnalyticsService(str(parquet.resolve().as_posix()))

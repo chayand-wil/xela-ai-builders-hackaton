@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from src.agent.guardrails import fold, inspect_question
-from src.agent.interpreter import interpret
+from src.agent.interpreter import interpret, language_provider
 from src.agent.responses import format_answer
 from src.agent.schemas import AgentQuery
 from src.analytics.service import get_analytics
@@ -68,6 +68,7 @@ def ask(
         "result": result,
         "status": "ok",
         "provider": provider,
+        "language_provider": language_provider(),
         "related_questions": _related_questions(query),
     }
 
