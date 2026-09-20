@@ -47,10 +47,14 @@ def ask(
             "status": "clarify",
         }
 
-    merged = dict(query.filters)
-    if extra_filters:
-        merged.update({key: value for key, value in extra_filters.items() if value not in (None, "", "Todos")})
-        query = query.model_copy(update={"filters": merged})
+    context_filters = {
+        key: value for key, value in (extra_filters or {}).items() if value not in (None, "", "Todos")
+    }
+    explicit_filters = dict(query.filters)
+    # Una pregunta explícita debe ser autosuficiente. Mezclarla con filtros
+    # heredados y no mencionados produce combinaciones sorprendentes o imposibles.
+    merged = explicit_filters if explicit_filters else context_filters
+    query = query.model_copy(update={"filters": merged})
 
     try:
         result = _run_query(query)

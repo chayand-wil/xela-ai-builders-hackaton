@@ -87,3 +87,21 @@ def test_chart_request_creates_grouped_result(demo_agent: AnalyticsService) -> N
     assert payload["query"]["group_by"] == "municipality"
     assert payload["query"]["filters"]["department"] == "Quetzaltenango"
     assert payload["result"]["rows"]
+
+
+def test_question_filters_override_incompatible_sidebar_context(demo_agent: AnalyticsService) -> None:
+    payload = ask(
+        "¿Cuántos hombres estudian en Quetzaltenango?",
+        extra_filters={
+            "department": "Chimaltenango",
+            "municipality": "Acatenango",
+            "level": "Diversificado",
+            "sex": "Mujer",
+        },
+    )
+    assert payload["status"] == "ok"
+    assert payload["query"]["filters"] == {
+        "department": "Quetzaltenango",
+        "sex": "Hombre",
+    }
+    assert payload["result"]["value"] > 0

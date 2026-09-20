@@ -120,6 +120,10 @@ def render_chat(filters: dict[str, str]) -> None:
         "en Alta Verapaz»**. Puedes continuar con «explícamelo», «compáralo» o «dame más detalles»."
     )
     st.caption(active_filters_text(filters))
+    st.caption(
+        "Si mencionas un territorio o grupo en la pregunta, esa selección reemplaza los filtros del menú. "
+        "Si no mencionas ninguno, se usa la selección lateral."
+    )
     st.info(
         "El asistente recuerda la conversación y respeta los filtros del menú. WrenAI consulta la capa "
         "semántica y DuckDB verifica las cifras; si no hay modelo de lenguaje, las preguntas frecuentes "
