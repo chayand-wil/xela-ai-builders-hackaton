@@ -1,0 +1,101 @@
+{
+  "total_registros_obtenido": 4298887,
+  "total_registros_esperado": 4298887,
+  "diferencia_total": 0,
+  "passed_total": true,
+  "checks": {
+    "municipios_guatemala": {
+      "obtenido": 17,
+      "esperado": 17,
+      "passed": true,
+      "lista_municipios": [
+        "Amatitlán",
+        "Chinautla",
+        "Chuarrancho",
+        "Fraijanes",
+        "Guatemala",
+        "Mixco",
+        "Palencia",
+        "Petapa",
+        "San José Pinula",
+        "San José del Golfo",
+        "San Juan Sacatepéquez",
+        "San Pedro Ayampuc",
+        "San Pedro Sacatepéquez",
+        "San Raymundo",
+        "Santa Catarina Pinula",
+        "Villa Canales",
+        "Villa Nueva"
+      ]
+    },
+    "municipios_nacionales": {
+      "obtenido": 340,
+      "esperado": "≈ 340",
+      "passed": true
+    },
+    "sector": {
+      "obtenido": {
+        "Público": 74.7,
+        "Municipal": 0.33,
+        "Privado": 20.95,
+        "Cooperativa": 4.02
+      },
+      "esperado": {
+        "Público": 74.7,
+        "Privado": 20.9,
+        "Cooperativa": 4.0,
+        "Municipal": 0.3
+      }
+    },
+    "area": {
+      "obtenido": {
+        "Rural": 61.39,
+        "Ignorado": 0.0,
+        "Urbana": 38.61
+      },
+      "esperado": {
+        "Rural": 61.4,
+        "Urbana": 38.6
+      }
+    },
+    "sexo": {
+      "obtenido": {
+        "Mujer": 49.32,
+        "Hombre": 50.68
+      },
+      "esperado": {
+        "Hombre": 50.7,
+        "Mujer": 49.3
+      }
+    },
+    "nivel": {
+      "obtenido": {
+        "Preprimaria": 17.11,
+        "Básico": 17.8,
+        "Primaria de adultos": 0.21,
+        "Primaria": 56.38,
+        "Diversificado": 8.49
+      },
+      "esperado": {
+        "Primaria": 56.4,
+        "Básico": 17.8,
+        "Preprimaria": 17.1,
+        "Diversificado": 8.5
+      }
+    },
+    "resultado": {
+      "obtenido": {
+        "Retirado": 5.53,
+        "Promovido": 85.24,
+        "No promovido": 9.19,
+        "Vigente": 0.05
+      },
+      "esperado": {
+        "Promovido": 85.2,
+        "No promovido": 9.2,
+        "Retirado": 5.5
+      }
+    }
+  },
+  "overall_passed": true
+}

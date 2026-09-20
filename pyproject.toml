@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "eduguate-ia"
+version = "0.1.0"
+description = "Herramienta analítica con IA para microdatos de Educación Formal 2024 en Guatemala"
+authors = [{ name = "EduGuate Team" }]
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "polars>=1.0.0",
+    "pyarrow>=15.0.0",
+    "openpyxl>=3.1.0",
+    "fastexcel>=0.11.0",
+    "duckdb>=1.0.0",
+    "pydantic>=2.7.0",
+    "tqdm>=4.66.0",
+]
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+ignore = []
