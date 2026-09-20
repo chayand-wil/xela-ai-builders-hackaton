@@ -61,10 +61,18 @@ def main() -> None:
     try:
         from src.integrations.wren import WrenClient
 
-        wren_status = WrenClient().status()
+        wren_client = WrenClient()
+        wren_status = wren_client.status()
         with st.sidebar.expander("Motor de consultas"):
             if wren_status.ready:
                 st.success(wren_status.message)
+                if st.button("Probar WrenAI", width="stretch"):
+                    try:
+                        total = wren_client.smoke_test()
+                        st.success(f"Consulta real completada: {total:,} inscripciones.")
+                    except Exception as exc:  # noqa: BLE001
+                        st.error("WrenAI no pudo completar la consulta de prueba.")
+                        st.caption(str(exc))
             elif wren_status.enabled:
                 st.warning(wren_status.message)
                 st.caption("La aplicación continúa automáticamente con DuckDB directo.")

@@ -1,7 +1,5 @@
 name: inscripciones
 table_reference:
-  catalog: ""
-  schema: main
   table: educacion_formal_2024
 properties:
   description: >-

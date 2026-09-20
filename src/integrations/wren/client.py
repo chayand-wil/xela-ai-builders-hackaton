@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 import shutil
 import subprocess
+from pathlib import Path
 
 from src.integrations.wren.config import WrenConfig
 from src.integrations.wren.models import WrenResult, WrenStatus
@@ -21,12 +22,25 @@ class WrenClient:
     def status(self) -> WrenStatus:
         if not self.config.enabled:
             return WrenStatus(False, False, False, "WrenAI desactivado; DuckDB directo está activo.")
-        if shutil.which(self.config.executable) is None:
+        if shutil.which(self.config.executable) is None and not Path(self.config.executable).is_file():
             return WrenStatus(True, False, False, "No se encontró el ejecutable de WrenAI.")
         missing = [path.name for path in (self.config.mdl_path, self.config.connection_file) if not path.is_file()]
         if missing:
             return WrenStatus(True, True, False, "Falta preparar: " + ", ".join(missing))
+        try:
+            self.config.mdl_path.read_text(encoding="utf-8")
+            connection = json.loads(self.config.connection_file.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+            return WrenStatus(True, True, False, f"La configuración de WrenAI no es válida: {exc}")
+        if connection.get("datasource") not in {"datafusion", "duckdb"}:
+            return WrenStatus(True, True, False, "La conexión local de WrenAI no tiene un datasource compatible.")
         return WrenStatus(True, True, True, "WrenAI está listo para consultas gobernadas.")
+
+    def smoke_test(self) -> int:
+        result = self.query('SELECT COUNT(*) AS total FROM "inscripciones"', limit=1)
+        if not result.rows or "total" not in result.rows[0]:
+            raise RuntimeError("WrenAI respondió, pero no devolvió el conteo esperado.")
+        return int(result.rows[0]["total"])
 
     def query(self, sql: str, *, limit: int = 500) -> WrenResult:
         status = self.status()

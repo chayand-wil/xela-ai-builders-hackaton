@@ -8,6 +8,7 @@ import polars as pl
 import pytest
 
 from src.analytics.indicators import non_promotion_parts, promotion_parts, rate_denominator, withdrawal_parts
+from src.analytics.narratives import describe_ranking
 from src.analytics.service import AnalyticsService, get_analytics
 
 TINY_ROWS = [
@@ -277,3 +278,18 @@ def test_kpis_against_real_parquet() -> None:
     assert kpis["promotion_rate"]["denominator"] > 0
     assert "percent" == kpis["promotion_rate"]["unit"]
     get_analytics.cache_clear()
+
+
+def test_narratives_translate_internal_dimension_and_filters() -> None:
+    text = describe_ranking(
+        "municipality",
+        [{"label": "Cobán", "value": 9397}],
+        "count",
+        {"shift": "Vespertina", "department": "Alta Verapaz"},
+    )
+    assert "por municipio" in text
+    assert "jornada: Vespertina" in text
+    assert "departamento: Alta Verapaz" in text
+    assert "municipality" not in text
+    assert "shift=" not in text
+    assert "department=" not in text

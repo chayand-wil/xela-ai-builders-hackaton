@@ -6,6 +6,27 @@ from typing import Any
 
 from src.analytics.indicators import IGNORADO_LABEL, VIGENTE_OUTCOME
 
+DIMENSION_LABELS = {
+    "department": "departamento",
+    "municipality": "municipio",
+    "level": "nivel educativo",
+    "sector": "sector",
+    "area": "área",
+    "sex": "sexo",
+    "ethnicity": "pueblo de pertenencia",
+    "shift": "jornada",
+    "study_plan": "plan de estudios",
+    "outcome": "resultado",
+}
+
+METRIC_LABELS = {
+    "enrollment_count": "inscripciones",
+    "promotion_rate": "tasa de promoción",
+    "non_promotion_rate": "tasa de no promoción",
+    "withdrawal_rate": "tasa de retiro",
+    "repetition_rate": "tasa de repitencia",
+}
+
 
 def _fmt_int(value: int | None) -> str:
     if value is None:
@@ -22,7 +43,7 @@ def _fmt_pct(value: float | None) -> str:
 def _filters_es(filters: dict | None) -> str:
     if not filters:
         return "sin filtros territoriales ni de dimensión"
-    parts = [f"{key}={value}" for key, value in filters.items()]
+    parts = [f"{DIMENSION_LABELS.get(key, key)}: {value}" for key, value in filters.items()]
     return ", ".join(parts)
 
 
@@ -48,34 +69,37 @@ def describe_rate(name: str, value: float | None, numerator: int, denominator: i
 
 
 def describe_distribution(dimension: str, rows: list[dict], filters: dict | None) -> str:
+    dimension_label = DIMENSION_LABELS.get(dimension, dimension)
     if not rows:
-        return f"No hay inscripciones para distribuir por {dimension} ({_filters_es(filters)})."
+        return f"No hay inscripciones para distribuir por {dimension_label} ({_filters_es(filters)})."
     top = rows[0]
     return (
-        f"Distribución de inscripciones por {dimension} ({_filters_es(filters)}). "
+        f"Distribución de inscripciones por {dimension_label} ({_filters_es(filters)}). "
         f"El grupo con más inscripciones es {top.get('label')} ({_fmt_int(int(top.get('value') or 0))})."
     )
 
 
 def describe_ranking(dimension: str, rows: list[dict], unit: str, filters: dict | None) -> str:
+    dimension_label = DIMENSION_LABELS.get(dimension, dimension)
     if not rows:
-        return f"No hay grupos para rankear por {dimension} ({_filters_es(filters)})."
+        return f"No hay grupos para ordenar por {dimension_label} ({_filters_es(filters)})."
     top = rows[0]
     if unit == "percent" and top.get("value") is not None:
         shown = _fmt_pct(float(top["value"]))
     else:
         shown = _fmt_int(int(top.get("value") or 0))
     return (
-        f"El primer lugar por {dimension} es {top.get('label')} con {shown} "
+        f"El primer lugar por {dimension_label} es {top.get('label')} con {shown} "
         f"({_filters_es(filters)})."
     )
 
 
 def describe_comparison(left: dict[str, Any], right: dict[str, Any], metric: str) -> str:
+    metric_label = METRIC_LABELS.get(metric, metric)
     left_v = left.get("value")
     right_v = right.get("value")
     if left_v is None or right_v is None:
-        return f"No se pudo comparar {metric}: falta denominador en uno de los conjuntos."
+        return f"No se pudo comparar {metric_label}: falta denominador en uno de los conjuntos."
     diff = float(right_v) - float(left_v)
     unit = left.get("unit") or right.get("unit")
     if unit == "percent":
@@ -87,7 +111,7 @@ def describe_comparison(left: dict[str, Any], right: dict[str, Any], metric: str
         left_txt = _fmt_int(int(left_v))
         right_txt = _fmt_int(int(right_v))
     return (
-        f"Comparación de {metric}: conjunto A = {left_txt} ({_filters_es(left.get('filters'))}); "
+        f"Comparación de {metric_label}: conjunto A = {left_txt} ({_filters_es(left.get('filters'))}); "
         f"conjunto B = {right_txt} ({_filters_es(right.get('filters'))}). "
         f"Diferencia B − A: {diff_txt}."
     )

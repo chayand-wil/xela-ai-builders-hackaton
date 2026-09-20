@@ -27,8 +27,19 @@ def test_query_rejects_mutation_before_subprocess(tmp_path: Path, monkeypatch: p
     config = _config(tmp_path)
     config.mdl_path.parent.mkdir()
     config.mdl_path.write_text("{}", encoding="utf-8")
-    config.connection_file.write_text("{}", encoding="utf-8")
+    config.connection_file.write_text('{"datasource":"datafusion"}', encoding="utf-8")
     monkeypatch.setattr("src.integrations.wren.client.shutil.which", lambda _name: "wren-test")
     client = WrenClient(config)
     with pytest.raises(ValueError, match="solo acepta consultas de lectura"):
         client.query("DELETE FROM inscripciones")
+
+
+def test_status_rejects_non_utf8_mdl(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    config = _config(tmp_path)
+    config.mdl_path.parent.mkdir()
+    config.mdl_path.write_bytes(b'{"description":"\xf3"}')
+    config.connection_file.write_text('{"datasource":"datafusion"}', encoding="utf-8")
+    monkeypatch.setattr("src.integrations.wren.client.shutil.which", lambda _name: "wren-test")
+    status = WrenClient(config).status()
+    assert not status.ready
+    assert "no es válida" in status.message
