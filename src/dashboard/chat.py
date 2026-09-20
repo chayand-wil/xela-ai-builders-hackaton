@@ -126,6 +126,13 @@ def render_chat(filters: dict[str, str]) -> None:
         "siguen funcionando localmente."
     )
 
+    with st.form("assistant_question_form", clear_on_submit=True):
+        typed_prompt = st.text_input(
+            "Escribe tu pregunta",
+            placeholder="Ejemplo: Grafica la tasa de retiro por municipio en Alta Verapaz",
+        )
+        submitted = st.form_submit_button("Consultar y generar gráfico", type="primary", width="stretch")
+
     ask, err = _load_ask()
     if ask is None:
         show_error(
@@ -162,8 +169,8 @@ def render_chat(filters: dict[str, str]) -> None:
                 st.markdown(item["content"])
 
     prompt = st.session_state.pop("chat_pending_question", None)
-    typed_prompt = st.chat_input("Pregunta y continúa la conversación…")
-    prompt = typed_prompt or prompt
+    if submitted:
+        prompt = typed_prompt.strip()
     if not prompt:
         return
 
