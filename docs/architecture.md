@@ -67,3 +67,9 @@ flowchart TD
 ### Componente 4: Agente Conversacional (`src/agent/`)
 - Traduce las preguntas del usuario en lenguaje natural a un objeto estructurado JSON de parámetros analíticos.
 - Ejecuta la consulta correspondiente a través de la capa analítica y genera una respuesta clara, verificada y libre de alucinaciones.
+- Modo demostración sin `OPENAI_API_KEY` (interpretación por reglas) y modo OpenAI JSON estructurado cuando hay clave.
+
+### Componente 5: WrenAI (capa semántica, no motor de cifras)
+- Paquete `wrenai` instalado desde `Downloads/WrenAI-main/core/wren`.
+- Proyecto MDL en `wren/` documenta columnas, enums y reglas de tasas.
+- El producto **no** usa `wren query` para los números del dashboard ni del chat. DuckDB en `src/analytics` es la única fuente de cifras.

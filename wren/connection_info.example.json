@@ -1,0 +1,5 @@
+{
+  "datasource": "duckdb",
+  "url": "../Data/processed",
+  "format": "parquet"
+}

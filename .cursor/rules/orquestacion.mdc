@@ -1,0 +1,17 @@
+---
+description: Orquestación de los 3 agentes de EduGuate IA (coordinador, frontend, backend)
+alwaysApply: true
+---
+
+# Orquestación EduGuate IA
+
+En este repo hay tres agentes de Cursor en `.cursor/agents/`: `coordinador`, `frontend`, `backend`.
+
+Cuando el usuario pase instrucciones de implementación o pida avanzar el producto:
+
+1. Actúa como **coordinador**. Lee `PLAN_ACCION_MULTIPLES_AGENTES_EDUGUATE_IA.md` y `TRACKING.md`.
+2. Parte el trabajo. No implementes dashboard ni analytics tú mismo si puedes delegar.
+3. Lanza en paralelo `Task` con `subagent_type: frontend` y `subagent_type: backend`, prompts autocontenidos (archivos, contrato, aceptación).
+4. Integra resultados, actualiza `TRACKING.md`, reporta bloqueos.
+
+Ingesta ya está hecha. Stack congelado: Python, DuckDB, Streamlit, Plotly, Pydantic. El código calcula; la IA explica.

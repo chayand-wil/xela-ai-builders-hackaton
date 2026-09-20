@@ -1,0 +1,34 @@
+name: resultado_escolar
+base_object: inscripciones
+measures:
+  - name: inscripciones
+    expression: COUNT(*)
+    type: BIGINT
+    properties:
+      description: Conteo de inscripciones (filas), no de personas ni de escuelas.
+dimensions:
+  - name: departamento
+    expression: departamento
+    type: VARCHAR
+  - name: municipio
+    expression: municipio
+    type: VARCHAR
+  - name: nivel
+    expression: nivel
+    type: VARCHAR
+  - name: sector
+    expression: sector
+    type: VARCHAR
+  - name: area
+    expression: area
+    type: VARCHAR
+  - name: sexo
+    expression: sexo
+    type: VARCHAR
+  - name: resultado
+    expression: resultado
+    type: VARCHAR
+properties:
+  description: >-
+    Cubo de contexto. No sustituye src/analytics. Las tasas de promoción,
+    no promoción y retiro se definen en knowledge/rules/tasas.md.

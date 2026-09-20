@@ -1,0 +1,87 @@
+name: inscripciones
+table_reference:
+  catalog: ""
+  schema: main
+  table: educacion_formal_2024
+properties:
+  description: >-
+    Una fila es una inscripción del ciclo escolar 2024 (INE, Educación Formal),
+    no una persona única. Fuente física: Parquet leído con DuckDB.
+    Las cifras del producto EduGuate IA NO se toman de wren query; este modelo
+    documenta semántica para agentes.
+columns:
+  - name: anio
+    type: SMALLINT
+    properties:
+      description: Ciclo escolar. En este dataset siempre 2024.
+  - name: codigo_establecimiento
+    type: VARCHAR
+    properties:
+      description: >-
+        Código de establecimiento DD-MM-NNNN-SS. Un establecimiento puede tener
+        varios códigos por nivel; no se debe llamar "número de escuelas" al
+        conteo de valores únicos.
+  - name: departamento_codigo
+    type: TINYINT
+    properties:
+      description: Código INE 1-22.
+  - name: departamento
+    type: VARCHAR
+    properties:
+      description: "Nombre oficial del departamento (22 valores)."
+  - name: municipio_codigo
+    type: VARCHAR
+    properties:
+      description: Código municipal de cuatro dígitos (0101-2217).
+  - name: municipio
+    type: VARCHAR
+    properties:
+      description: Nombre oficial del municipio.
+  - name: sector
+    type: VARCHAR
+    properties:
+      description: "Enum: Público, Privado, Municipal, Cooperativa."
+  - name: area
+    type: VARCHAR
+    properties:
+      description: "Enum: Urbana, Rural, Ignorado. El código 9 ya es el texto Ignorado, no nulo."
+  - name: sexo
+    type: VARCHAR
+    properties:
+      description: "Enum: Hombre, Mujer, Ignorado."
+  - name: grado
+    type: TINYINT
+    properties:
+      description: Grado escolar; debe interpretarse junto con nivel.
+  - name: nivel
+    type: VARCHAR
+    properties:
+      description: "Enum: Preprimaria, Primaria, Básico, Diversificado, Primaria de adultos, Ignorado."
+  - name: pueblo_pertenencia
+    type: VARCHAR
+    properties:
+      description: "Enum: Maya, Garífuna, Xinka, Afrodescendiente/Creole/Afromestizo, Ladino/Mestizo, Extranjero, Ignorado."
+  - name: plan_estudios
+    type: VARCHAR
+    properties:
+      description: "Enum: Diario, Fin de semana, Virtual a distancia, Semipresencial, Mixto."
+  - name: jornada
+    type: VARCHAR
+    properties:
+      description: "Enum: Matutina, Vespertina, Nocturna, Doble, Intermedia, Ignorado."
+  - name: resultado
+    type: VARCHAR
+    properties:
+      description: >-
+        Enum: Promovido, Vigente, Retirado, Retirado definitivo, No promovido, Ignorado.
+        Denominador de tasas de resultado = Promovido + No promovido + Retirado + Retirado definitivo.
+        Vigente e Ignorado quedan fuera de ese denominador y se reportan aparte.
+        La métrica de retiro consolida Retirado + Retirado definitivo.
+  - name: repitente
+    type: VARCHAR
+    properties:
+      description: "Enum: Sí, No, Ignorado. La tasa de repitencia usa Sí / (Sí + No)."
+  - name: graduando
+    type: VARCHAR
+    properties:
+      description: "Enum: Sí es graduando, No es graduando, Ignorado."

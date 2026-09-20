@@ -89,3 +89,19 @@ El dashboard debe ser interactivo, intuitivo para usuarios no técnicos y fácil
 
 ### Decisión:
 Se adoptó **Streamlit + Plotly** por su rapidez de iteración, integración directa con DuckDB y la capacidad de situar fácilmente bloques de **análisis escrito interpretativo** junto a cada visualización.
+
+---
+
+## ADR-006: WrenAI como capa semántica, no como motor de cifras del producto
+
+### Estado: Aprobado
+### Fecha: 2026-09-20
+
+### Contexto:
+El equipo pidió instalar el agente WrenAI desde la carpeta local `Downloads/WrenAI-main`. Wren genera SQL gobernado (MDL) y es útil para documentar significado de columnas, enumeraciones y métricas. El plan del hackatón y ADR-003 prohíben SQL libre del modelo como fuente de cifras.
+
+### Decisión:
+1. Instalar el paquete `wrenai` (CLI + SDK) y el skill de descubrimiento en `.cursor/skills/wren/`.
+2. Modelar el Parquet de Educación Formal 2024 como proyecto Wren (DuckDB) para contexto y validación de definiciones.
+3. **El dashboard y el chat de producto siguen calculando solo con `src/analytics` (consultas parametrizadas DuckDB).** Wren no sustituye esa capa.
+4. El intérprete LLM mapea la pregunta a métricas permitidas; si Wren se usa, es para enriquecer contexto o dry-plan, no para ejecutar SQL arbitrario en la demo.

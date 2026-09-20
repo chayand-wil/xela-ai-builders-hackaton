@@ -8,13 +8,13 @@
 
 | Métrica | Estado |
 |---|---|
-| **Progreso General Estimado** | **35%** |
+| **Progreso General Estimado** | **75%** |
 | **Puntaje Objetivo** | **100 / 100 puntos** |
 | **Dataset Base Procesado** | **4,298,887 registros** (100% del censo escolar 2024) |
 | **Última Actualización** | 2026-09-20 |
 
 ```
-[██████████░░░░░░░░░░░░░░░░░░] 35% Completado
+[██████████████████████░░░░░░] 75% Completado
 ```
 
 ---
@@ -25,9 +25,9 @@
 |:---:|---|---|:---:|
 | **Fase 0** | **Setup & Auditoría** | Entorno virtual, dependencias, auditoría de 23 archivos | ✅ **100% Completado** |
 | **Fase 1** | **Ingesta & ETL** | Extracción, decodificación, limpieza `00-`, validación Parquet | ✅ **100% Completado** |
-| **Fase 2** | **Motor Analítico** | Consultas DuckDB, centralización de fórmulas de indicadores | 🔄 **Siguiente Fase** |
-| **Fase 3** | **Dashboard** | Streamlit + Plotly, vista general y territorial, análisis escrito | ⏳ **Pendiente** |
-| **Fase 4** | **Agente con IA** | Agente conversacional LLM sin alucinación de cifras | ⏳ **Pendiente** |
+| **Fase 2** | **Motor Analítico** | Consultas DuckDB, centralización de fórmulas de indicadores | ✅ **Completado** |
+| **Fase 3** | **Dashboard** | Streamlit + Plotly, vista general y territorial, análisis escrito | ✅ **MVP conectado** |
+| **Fase 4** | **Agente con IA** | Agente conversacional LLM sin alucinación de cifras | 🔄 **Demo + OpenAI** |
 | **Fase 5** | **Entrega & Pitch** | 2 Videos (Arquitectura y Demo), README final y pitch de 5 min | ⏳ **Pendiente** |
 
 ---
@@ -76,38 +76,33 @@
 
 ---
 
-### 🔄 Fase 2: Motor Analítico y Capa de Consultas DuckDB (0% — Próximo Paso)
-- [ ] **Configuración de DuckDB:** Conexión eficiente sobre `educacion_formal_2024.parquet`.
-- [ ] **Módulo de Consultas (`src/analytics/queries.py`):**
-  - [ ] Filtros parametrizados seguros (por departamento, municipio, sector, área, nivel, sexo).
-  - [ ] Consultas agregadas con retorno instantáneo (< 50 ms).
-- [ ] **Módulo de Fórmulas e Indicadores (`src/analytics/indicators.py`):**
-  - [ ] Fórmula estandarizada de **Tasa de Promoción**: Promovidos / (Promovidos + No promovidos + Retirados).
-  - [ ] Fórmula de **Tasa de No Promoción**: No promovidos / (Promovidos + No promovidos + Retirados).
-  - [ ] Fórmula de **Tasa de Retiro**: (Retirado + Retirado definitivo) / (Promovidos + No promovidos + Retirados).
-  - [ ] Manejo explícito de `Vigente` e `Ignorado` fuera del denominador de tasas.
-  - [ ] Cálculo de rankings territoriales (top/bottom de municipios o departamentos).
-- [ ] **Generador de Narrativas Automáticas (`src/analytics/narratives.py`):**
-  - [ ] Textos deterministas que explican en lenguaje sencillo qué significa cada cifra (mayor valor, menor valor, brechas).
-- [ ] **Pruebas Unitarias (`tests/test_analytics.py`):**
-  - [ ] Validación de cálculo manual de tasas sobre la muestra de datos.
+### ✅ Fase 2: Motor Analítico y Capa de Consultas DuckDB
+- [x] DuckDB sobre Parquet (`src/analytics/paths.py`, `DuckDBStore`).
+- [x] Filtros parametrizados y allowlist de columnas (`src/analytics/queries.py`).
+- [x] Tasas de promoción, no promoción, retiro y repitencia; ranking, comparación, distribución.
+- [x] Denominador = Promovido + No promovido + Retirado + Retirado definitivo; Vigente/Ignorado aparte.
+- [x] Narrativas deterministas (`src/analytics/narratives.py`).
+- [x] Interfaz única `get_analytics()` para dashboard y chat.
+- [x] Pytest de indicadores, consultas y agente (19 tests con ingesta).
 
----
+### ✅ Fase 3: Dashboard Interactivo (Streamlit + Plotly) — MVP
+- [x] `streamlit run app.py` en http://localhost:8501.
+- [x] Sidebar de filtros compartidos con el chat; cascada departamento → municipio.
+- [x] Tabs: Panorama, Territorio, Metodología, Preguntar a los datos.
+- [x] 4 KPIs + ≥4 Plotly con texto del backend.
+- [x] Verificado: nacional 4,298,887 / 85.3% / 9.2% / 5.5%; Alta Verapaz → 391,085.
+- [ ] Vista dedicada de brechas (público/privado, urbano/rural, sexo) como tab extra.
 
-### ⏳ Fase 3: Dashboard Interactivo (Streamlit + Plotly)
-- [ ] Estructura visual en Streamlit (`app.py`).
-- [ ] Vista 1: **Panorama Nacional** (KPIs clave + distribución por nivel + composición del resultado).
-- [ ] Vista 2: **Territorio** (Selector de departamento &rarr; desglose municipal con comparativas).
-- [ ] Vista 3: **Brechas Educativas** (Público vs Privado, Urbano vs Rural, Sexo).
-- [ ] Integración de análisis escrito explicativo debajo de cada gráfica (cumplimiento estricto del reto).
+### 🔄 Fase 4: Agente Conversacional
+- [x] Pydantic, intérprete, guardrails y `from src.agent import ask`.
+- [x] Modo demo sin API; OpenAI JSON si hay `OPENAI_API_KEY`.
+- [x] Chat Streamlit con `extra_filters` del sidebar.
+- [ ] Banco de 15 preguntas con cobertura completa (el demo regex aún es limitado).
 
----
-
-### ⏳ Fase 4: Agente Conversacional en Lenguaje Natural
-- [ ] Definición de esquemas de consulta en JSON estructurado (`src/agent/schemas.py`).
-- [ ] Intérprete LLM que mapea preguntas del usuario a parámetros analíticos (`src/agent/interpreter.py`).
-- [ ] Capa de Guardrails: prevención de alucinaciones, respuestas solo sobre datos calculados (`src/agent/guardrails.py`).
-- [ ] Interfaz de chat integrada en el dashboard.
+### WrenAI
+- [x] Skill en `.cursor/skills/wren/` desde `Downloads/WrenAI-main`.
+- [x] `wrenai` 0.14.0 editable desde `WrenAI-main/core/wren`.
+- [x] Proyecto MDL en `wren/`. Las cifras del producto no salen de `wren query`.
 
 ---
 
