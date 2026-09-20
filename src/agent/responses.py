@@ -59,6 +59,11 @@ def format_answer(
             "Cómo leerlo: cada fila representa una inscripción de 2024, no una persona única. "
             "Promoción, no promoción y retiro excluyen Vigente e Ignorado del denominador."
         )
+    if query.filters.get("graduate_status") == "Sí es graduando":
+        lines.append(
+            "Importante: el dato cuenta inscripciones marcadas como «Sí es graduando». "
+            "No confirma que la persona haya recibido un título ni representa personas únicas."
+        )
     lines.append(
         "Fuente: microdatos Educación Formal 2024 (INE), calculados con DuckDB sobre Parquet. "
         "El modelo de lenguaje no generó estas cifras."

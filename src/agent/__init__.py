@@ -47,14 +47,10 @@ def ask(
             "status": "clarify",
         }
 
-    context_filters = {
-        key: value for key, value in (extra_filters or {}).items() if value not in (None, "", "Todos")
-    }
     explicit_filters = dict(query.filters)
-    # Una pregunta explícita debe ser autosuficiente. Mezclarla con filtros
-    # heredados y no mencionados produce combinaciones sorprendentes o imposibles.
-    merged = explicit_filters if explicit_filters else context_filters
-    query = query.model_copy(update={"filters": merged})
+    # El chat es deliberadamente independiente del tablero. Los filtros visuales
+    # nunca se mezclan silenciosamente con una pregunta conversacional.
+    query = query.model_copy(update={"filters": explicit_filters})
 
     try:
         result = _run_query(query)

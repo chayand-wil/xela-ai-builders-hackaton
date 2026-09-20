@@ -17,6 +17,7 @@ FILTER_LABELS: dict[str, str] = {
     "shift": "Jornada",
     "study_plan": "Plan de estudios",
     "outcome": "Resultado",
+    "graduate_status": "Condición de graduando",
 }
 
 KPI_ORDER: tuple[tuple[str, str], ...] = (

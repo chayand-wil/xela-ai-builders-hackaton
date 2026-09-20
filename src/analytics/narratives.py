@@ -17,6 +17,7 @@ DIMENSION_LABELS = {
     "shift": "jornada",
     "study_plan": "plan de estudios",
     "outcome": "resultado",
+    "graduate_status": "condición de graduando",
 }
 
 METRIC_LABELS = {

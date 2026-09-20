@@ -18,6 +18,7 @@ FILTER_KEYS: dict[str, str] = {
     "shift": "jornada",
     "study_plan": "plan_estudios",
     "outcome": "resultado",
+    "graduate_status": "graduando",
 }
 
 SQL_COLUMNS: frozenset[str] = frozenset(

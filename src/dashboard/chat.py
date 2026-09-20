@@ -119,13 +119,12 @@ def render_chat(filters: dict[str, str]) -> None:
         "Escribe lo que quieres conocer. Por ejemplo: **«Grafica la tasa de retiro por municipio "
         "en Alta Verapaz»**. Puedes continuar con «explícamelo», «compáralo» o «dame más detalles»."
     )
-    st.caption(active_filters_text(filters))
     st.caption(
-        "Si mencionas un territorio o grupo en la pregunta, esa selección reemplaza los filtros del menú. "
-        "Si no mencionas ninguno, se usa la selección lateral."
+        "El asistente usa únicamente lo que escribas en la pregunta; "
+        "los filtros laterales no modifican la respuesta."
     )
     st.info(
-        "El asistente recuerda la conversación y respeta los filtros del menú. WrenAI consulta la capa "
+        "El asistente recuerda la conversación. WrenAI consulta la capa "
         "semántica y DuckDB verifica las cifras; si no hay modelo de lenguaje, las preguntas frecuentes "
         "siguen funcionando localmente."
     )
@@ -188,7 +187,7 @@ def render_chat(filters: dict[str, str]) -> None:
                 try:
                     response = ask(
                         prompt,
-                        extra_filters=filters,
+                        extra_filters=None,
                         history=st.session_state.chat_messages[:-1],
                         audience="Público general",
                     )

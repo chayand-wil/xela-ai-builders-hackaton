@@ -32,7 +32,8 @@ enrollment_count, promotion_rate, non_promotion_rate, withdrawal_rate,
 repetition_rate, distribution, ranking, comparison.
 
 filters y compare_filters usan estas claves en inglés:
-department, municipality, level, sector, area, sex, ethnicity, shift, study_plan, outcome.
+department, municipality, level, sector, area, sex, ethnicity, shift, study_plan, outcome,
+graduate_status.
 
 Valores canónicos:
 - department: nombres oficiales (Guatemala, Quetzaltenango, Alta Verapaz, ...)
@@ -44,6 +45,7 @@ Valores canónicos:
 - ethnicity: Maya, Garífuna, Xinka, Afrodescendiente/Creole/Afromestizo, Ladino/Mestizo, Extranjero, Ignorado
 - shift: Matutina, Vespertina, Nocturna, Doble, Intermedia, Ignorado
 - study_plan: Diario, Fin de semana, Virtual a distancia, Semipresencial, Mixto
+- graduate_status: Sí es graduando, No es graduando, Ignorado
 
 Reglas:
 - Una fila es una inscripción, no una persona única.
@@ -52,6 +54,8 @@ Reglas:
 - distribution: group_by obligatorio.
 - Retiro combina Retirado + Retirado definitivo (withdrawal_rate).
 - Si piden el departamento con más inscripciones: ranking, group_by=department, rank_metric=enrollment_count.
+- "graduados" o "graduandos" se interpreta como inscripciones marcadas `Sí es graduando`.
+  El dataset no confirma que hayan obtenido un título; nunca los llames personas graduadas.
 """
 
 load_dotenv()
@@ -131,6 +135,10 @@ def interpret_demo(question: str, previous_query: AgentQuery | None = None) -> A
     wants_promo = bool(re.search(r"promoc", text)) and not wants_non_promo
     wants_repeat = bool(re.search(r"repiten", text))
     wants_count = bool(re.search(r"cuant", text) or re.search(r"inscripcion", text))
+    wants_graduating = bool(re.search(r"graduad|graduand", text))
+    if wants_graduating:
+        filters["graduate_status"] = "Sí es graduando"
+        wants_count = True
 
     requested_group = None
     group_words = {
@@ -148,6 +156,8 @@ def interpret_demo(question: str, previous_query: AgentQuery | None = None) -> A
             if word in text:
                 requested_group = group
                 break
+    if "graf" in text and requested_group is None:
+        requested_group = "municipality" if departments else "department"
 
     if wants_distribution:
         group = "sector"
@@ -266,6 +276,22 @@ def language_provider() -> str:
     return "Groq" if "groq.com" in config[1] else "OpenAI"
 
 
+def _enforce_question_contract(question: str, query: AgentQuery) -> AgentQuery:
+    """Aplica reglas explícitas que el modelo no puede omitir."""
+    text = fold(question)
+    updates: dict[str, Any] = {}
+    filters = dict(query.filters)
+    if re.search(r"graduad|graduand", text):
+        filters["graduate_status"] = "Sí es graduando"
+        updates["filters"] = filters
+    if "graf" in text and query.group_by is None:
+        updates["group_by"] = "municipality" if "department" in filters else "department"
+        if query.metric == "comparison":
+            updates["metric"] = query.rank_metric or "enrollment_count"
+            updates["compare_filters"] = None
+    return query.model_copy(update=updates) if updates else query
+
+
 def interpret_llm(question: str, previous_query: AgentQuery | None = None) -> AgentQuery:
     from openai import OpenAI
 
@@ -296,7 +322,7 @@ def interpret_llm(question: str, previous_query: AgentQuery | None = None) -> Ag
 def interpret(question: str, previous_query: AgentQuery | None = None) -> AgentQuery:
     if _llm_config() is not None:
         try:
-            return interpret_llm(question, previous_query)
+            return _enforce_question_contract(question, interpret_llm(question, previous_query))
         except Exception:
-            return interpret_demo(question, previous_query)
-    return interpret_demo(question, previous_query)
+            return _enforce_question_contract(question, interpret_demo(question, previous_query))
+    return _enforce_question_contract(question, interpret_demo(question, previous_query))

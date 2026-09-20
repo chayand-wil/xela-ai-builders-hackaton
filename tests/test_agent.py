@@ -105,3 +105,28 @@ def test_question_filters_override_incompatible_sidebar_context(demo_agent: Anal
         "sex": "Hombre",
     }
     assert payload["result"]["value"] > 0
+
+
+def test_sidebar_filters_never_affect_unqualified_chat_question(demo_agent: AnalyticsService) -> None:
+    payload = ask(
+        "¿Cuántas inscripciones hay?",
+        extra_filters={"department": "Guatemala", "sex": "Mujer"},
+    )
+    assert payload["query"]["filters"] == {}
+    assert payload["result"]["value"] == 11
+
+
+def test_graduates_question_uses_graduando_field(demo_agent: AnalyticsService) -> None:
+    payload = ask("¿Cuántos graduados hay en Guatemala?")
+    assert payload["query"]["metric"] == "enrollment_count"
+    assert payload["query"]["filters"] == {
+        "department": "Guatemala",
+        "graduate_status": "Sí es graduando",
+    }
+    assert "No confirma" in payload["answer"]
+
+
+def test_graduating_chart_gets_automatic_grouping(demo_agent: AnalyticsService) -> None:
+    payload = ask("Grafica cuántos graduandos hay en Quetzaltenango")
+    assert payload["query"]["group_by"] == "municipality"
+    assert payload["query"]["filters"]["graduate_status"] == "Sí es graduando"
