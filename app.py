@@ -46,10 +46,10 @@ def _load_analytics():
 
 def main() -> None:
     st.title("EduGuate IA")
-    st.subheader("Educación Formal · ciclo 2024 · INE Guatemala")
+    st.subheader("Entiende la educación de Guatemala con datos de 2024")
     st.markdown(
-        "Tablero para entender inscripciones escolares **sin recalcular tasas en la pantalla**. "
-        "El código analítico cuenta; esta interfaz muestra y explica."
+        "Explora tu territorio o conversa con el asistente. Cada cifra incluye una explicación "
+        "sencilla y la información necesaria para comprobar cómo fue calculada."
     )
 
     audience = st.sidebar.selectbox(
@@ -58,31 +58,6 @@ def main() -> None:
         help="Cambia el nivel de detalle y la forma de explicar los resultados.",
     )
     st.session_state["audience"] = audience
-    try:
-        from src.integrations.wren import WrenClient
-
-        wren_client = WrenClient()
-        wren_status = wren_client.status()
-        with st.sidebar.expander("Motor de consultas"):
-            if wren_status.ready:
-                st.success(wren_status.message)
-                if st.button("Probar WrenAI", width="stretch"):
-                    try:
-                        total = wren_client.smoke_test()
-                        st.success(f"Consulta real completada: {total:,} inscripciones.")
-                    except Exception as exc:  # noqa: BLE001
-                        st.error("WrenAI no pudo completar la consulta de prueba.")
-                        st.caption(str(exc))
-            elif wren_status.enabled:
-                st.warning(wren_status.message)
-                st.caption("La aplicación continúa automáticamente con DuckDB directo.")
-            else:
-                st.info(wren_status.message)
-    except Exception as exc:  # noqa: BLE001
-        with st.sidebar.expander("Motor de consultas"):
-            st.warning("No se pudo comprobar WrenAI; se usará DuckDB directo.")
-            st.caption(str(exc))
-
     svc, analytics_error = _load_analytics()
     options: dict = {}
     filters: dict = {}
@@ -104,7 +79,7 @@ def main() -> None:
         [
             "Panorama nacional",
             "Territorio",
-            "Preguntar a los datos",
+            "Pregunta al asistente",
             "Comparar",
             "Explorador",
             "Descubrir",

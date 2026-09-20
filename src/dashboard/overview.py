@@ -58,8 +58,8 @@ def _top_row_sentence(result: Any, *, entity: str, unit_phrase: str) -> str:
 def render_overview(svc: Any, filters: dict[str, str]) -> None:
     st.subheader("Panorama nacional")
     st.write(
-        "Resumen del ciclo 2024 con los filtros del menú izquierdo. "
-        "Las tasas las calcula la capa analítica; aquí solo se muestran."
+        "Una mirada rápida al ciclo escolar 2024. Usa los filtros para conocer un territorio "
+        "o grupo específico y abre los detalles para entender cada resultado."
     )
 
     try:
@@ -87,7 +87,7 @@ def render_overview(svc: Any, filters: dict[str, str]) -> None:
 
     kpis = normalize_kpis(kpis_raw)
     if not kpis:
-        show_error("La capa analítica no devolvió los cuatro indicadores esperados.")
+        show_error("No fue posible obtener los cuatro indicadores esperados.")
         return
 
     render_kpi_row(kpis)

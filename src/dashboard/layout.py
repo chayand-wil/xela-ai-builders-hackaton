@@ -263,6 +263,11 @@ El **retiro** consolida los códigos de *Retirado* y *Retirado definitivo*.
 **Vigente e Ignorado.** Se muestran aparte (por ejemplo en la composición de resultado) y **no entran**
 en el denominador de esas tasas, para no diluir el cierre del ciclo.
 
+**Por qué promoción puede verse como 85.3% y no 85.2%.** El 85.2% describe la proporción de
+registros promovidos sobre todas las filas. La tarjeta de promoción usa únicamente los
+**4,296,706 resultados finales conocidos**, como exige la metodología; por eso muestra 85.3% al
+redondear a un decimal. No son cifras contradictorias: tienen denominadores distintos.
+
 **Establecimientos.** Un centro puede tener varios `codigo_establecimiento` (por nivel u otra
 organización). **No llamamos “escuelas”** al conteo de códigos.
 
@@ -278,7 +283,8 @@ Todas las tasas las calcula el código de `src.analytics`. Esta pantalla solo la
     st.markdown(
         """
 **Controles de volumen (referencia de calidad, no recalculados aquí):** total nacional
-**4,298,887** inscripciones; departamento de Guatemala con **17** municipios.
+**4,298,887** inscripciones; **22** departamentos; **340** municipios en el país; departamento de
+Guatemala con **17** municipios. El reporte de validación confirma diferencia cero contra el total esperado.
         """
     )
 
@@ -294,6 +300,12 @@ def render_kpi_row(kpis: dict[str, Any]) -> None:
                 continue
             narrative = result_get(item, "narrative", default=None)
             st.metric(title, format_kpi_value(item))
-            st.caption(denominator_caption(item))
-            if narrative:
-                st.caption(str(narrative))
+            unit = str(result_get(item, "unit", default="") or "")
+            if unit == "percent":
+                st.caption("De cada 100 inscripciones con resultado conocido.")
+            else:
+                st.caption("Registros de inscripción del ciclo 2024.")
+            with st.expander("Ver cómo se calculó"):
+                st.write(denominator_caption(item))
+                if narrative:
+                    st.write(str(narrative))
