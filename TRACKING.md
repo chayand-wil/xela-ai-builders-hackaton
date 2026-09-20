@@ -8,13 +8,13 @@
 
 | Métrica | Estado |
 |---|---|
-| **Progreso General Estimado** | **75%** |
+| **Progreso General Estimado** | **90%** |
 | **Puntaje Objetivo** | **100 / 100 puntos** |
 | **Dataset Base Procesado** | **4,298,887 registros** (100% del censo escolar 2024) |
 | **Última Actualización** | 2026-09-20 |
 
 ```
-[██████████████████████░░░░░░] 75% Completado
+[███████████████████████████░] 90% Completado
 ```
 
 ---
@@ -27,8 +27,8 @@
 | **Fase 1** | **Ingesta & ETL** | Extracción, decodificación, limpieza `00-`, validación Parquet | ✅ **100% Completado** |
 | **Fase 2** | **Motor Analítico** | Consultas DuckDB, centralización de fórmulas de indicadores | ✅ **100% Completado** |
 | **Fase 3** | **Dashboard** | Streamlit + Plotly, vista general y territorial, análisis escrito | ✅ **100% Completado** |
-| **Fase 4** | **Agente con IA** | Agente conversacional LLM sin alucinación de cifras | 🔄 **Siguiente Fase** |
-| **Fase 5** | **Entrega & Pitch** | 2 Videos (Arquitectura y Demo), README final y pitch de 5 min | ⏳ **Pendiente** |
+| **Fase 4** | **Agente con IA** | Agente conversacional LLM sin alucinación de cifras (Groq + DuckDB) | ✅ **100% Completado** |
+| **Fase 5** | **Entrega & Pitch** | 2 Videos (Arquitectura y Demo), README final y pitch de 5 min | 🔄 **Siguiente Fase** |
 
 ---
 
@@ -132,11 +132,39 @@
 
 ---
 
-### ⏳ Fase 4: Agente Conversacional en Lenguaje Natural
-- [ ] Definición de esquemas de consulta en JSON estructurado (`src/agent/schemas.py`).
-- [ ] Intérprete LLM que mapea preguntas del usuario a parámetros analíticos (`src/agent/interpreter.py`).
-- [ ] Capa de Guardrails: prevención de alucinaciones, respuestas solo sobre datos calculados (`src/agent/guardrails.py`).
-- [ ] Interfaz de chat integrada en el dashboard.
+### ✅ Fase 4: Agente Conversacional en Lenguaje Natural (100%)
+- [x] **Modal de Bienvenida y Asistente de Referencia (`src/dashboard/components.py`):**
+  - [x] Modal interactivo inicial con 2 rutas: Configuración de Audiencia/Referencia vs Exploración Directa.
+  - [x] Asistente de selección de audiencia (Autoridades, Docentes, Periodistas, Padres de Familia).
+  - [x] Preconfiguración de territorio (Departamento/Municipio), Nivel y Sector de referencia.
+  - [x] Banner contextual activo de audiencia en la cabecera.
+  - [x] Botón en barra lateral para reabrir el modal de referencia en cualquier momento.
+- [x] **Esquemas Tipados (`src/agent/schemas.py`):**
+  - [x] Modelos Pydantic (`AgentIntent`, `AgentResponse`, `QueryCategory`).
+  - [x] Categorización estricta: `DATA_QUERY`, `ANALYSIS_QUERY`, `OUT_OF_SCOPE`, `GREETING`.
+- [x] **Cliente y Proveedor LLM (`src/agent/client.py`):**
+  - [x] Integración de Groq Cloud (`groq/compound-mini`) con clave segura desde `.env`.
+  - [x] Latencias de inferencia ultrabajas (< 400ms).
+  - [x] Fallback determinista local para operación offline o sin API key.
+- [x] **Herramientas Analíticas y Contexto (`src/agent/tools.py`):**
+  - [x] Mapeo de intención a consultas DuckDB sobre los 4,298,887 microdatos (< 50ms).
+  - [x] Inyección de hallazgos del dashboard (brechas rural/urbana, sector, niveles).
+  - [x] Declaración transparente de variables disponibles para consultas fuera de alcance.
+- [x] **Prompts del Sistema y Guardrails (`src/agent/prompts.py`):**
+  - [x] Prompt de extracción semántica en JSON con normalización de sinónimos del INE.
+  - [x] Prompt generador con **regla estricta de CERO ALUCINACIÓN**: prohibido inventar cifras.
+- [x] **Orquestador Principal (`src/agent/engine.py`):**
+  - [x] Flujo de 3 pasos: Extracción &rarr; Cálculo DuckDB &rarr; Generación guiada.
+- [x] **Interfaz de Chat en Streamlit (`app.py` - Pestaña 4):**
+  - [x] Chat interactivo en vivo con `st.chat_message` y `st.chat_input`.
+  - [x] Historial de conversación persistente durante la sesión.
+  - [x] Botones de preguntas sugeridas para demostración rápida ante el jurado.
+  - [x] Badge de verificación: *"🛡️ Cifras calculadas con DuckDB | Latencia: X ms"*.
+  - [x] Desplegable de auditoría técnica con el JSON estructurado y datos de DuckDB.
+- [x] **Pruebas y Calidad:**
+  - [x] 8 pruebas unitarias automatizadas (`tests/test_agent.py`).
+  - [x] Total suite: 28/28 pruebas PASS en 6.46s.
+  - [x] 100% código conforme con `ruff check` y `ruff format`.
 
 ---
 

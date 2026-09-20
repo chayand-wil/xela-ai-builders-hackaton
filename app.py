@@ -1,13 +1,14 @@
 """Aplicación principal del Dashboard EduGuate IA para el Hackatón AI Builders GT 2024.
 
-Construida con Streamlit, Plotly y DuckDB, procesando 4,298,887 microdatos del Censo Escolar 2024.
-Todas las visualizaciones cuentan con análisis escrito interpretativo obligatorio para no técnicos.
+Construida con Streamlit, Plotly, DuckDB y Groq LLM, procesando 4,298,887 microdatos del Censo Escolar 2024.
+Todas las visualizaciones cuentan con análisis interpretativo obligatorio y agente con guardrails anti-alucinación.
 """
 
 from __future__ import annotations
 
 import streamlit as st
 
+from src.agent.engine import EduGuateAgent
 from src.analytics.narratives import explain_breakdown, explain_kpis, explain_ranking
 from src.analytics.queries import AnalyticsEngine
 from src.dashboard.charts import (
@@ -24,7 +25,9 @@ from src.dashboard.components import (
     render_header,
     render_kpi_card,
     render_narrative_box,
+    render_reference_banner,
     render_sidebar_filters,
+    render_welcome_modal,
 )
 
 # Configuración de página de Streamlit
@@ -42,26 +45,44 @@ def get_analytics_engine() -> AnalyticsEngine:
     return AnalyticsEngine()
 
 
+@st.cache_resource(show_spinner="Conectando Agente Conversacional con Groq...")
+def get_agent(_engine: AnalyticsEngine) -> EduGuateAgent:
+    """Inicializa el agente conversacional asistido por IA."""
+    return EduGuateAgent(engine=_engine)
+
+
 def main() -> None:
     # 1. Inyección de estilos CSS y Renderizado de Header
     inject_custom_css()
     render_header()
 
-    # 2. Inicialización del motor analítico
+    # 2. Inicialización del motor analítico y del agente
     try:
         engine = get_analytics_engine()
+        agent = get_agent(engine)
     except Exception as e:
-        st.error(f"Error al inicializar el motor analítico: {e}")
+        st.error(f"Error al inicializar los motores analíticos: {e}")
         st.info("Asegúrate de haber procesado los datos con `python scripts/process_data.py`.")
         return
 
-    # 3. Filtros globales en barra lateral
+    # 3. Modal de bienvenida inicial (Control de navegación)
+    if "welcome_shown" not in st.session_state:
+        st.session_state["welcome_shown"] = True
+        st.session_state["show_welcome_dialog"] = True
+
+    if st.session_state.get("show_welcome_dialog", False):
+        render_welcome_modal(engine)
+
+    # 4. Filtros globales en barra lateral
     filters = render_sidebar_filters(engine)
 
-    # 4. Cálculo de KPIs principales según filtros activos
+    # Banner de referencia de audiencia activa
+    render_reference_banner(st.session_state.get("user_role"), filters)
+
+    # 5. Cálculo de KPIs principales según filtros activos
     kpis = engine.get_kpis(filters)
 
-    # 5. Estructura de Pestañas Principales
+    # 6. Estructura de Pestañas Principales
     tab1, tab2, tab3, tab4 = st.tabs(
         [
             "🏛️ Panorama Nacional",
@@ -99,7 +120,7 @@ def main() -> None:
                 title="Tasa de Promoción",
                 value=f"{kpis.tasa_promocion:.1f}%",
                 subtitle=f"{kpis.promovidos:,} aprobados",
-                accent_color="#10B981",
+                accent_color="#059669",
                 pill_text="Aprobados",
                 pill_bg="#ECFDF5",
                 pill_color="#047857",
@@ -109,7 +130,7 @@ def main() -> None:
                 title="Tasa de No Promoción",
                 value=f"{kpis.tasa_no_promocion:.1f}%",
                 subtitle=f"{kpis.no_promovidos:,} no promovidos",
-                accent_color="#F59E0B",
+                accent_color="#D97706",
                 pill_text="Reprobados",
                 pill_bg="#FFFBEB",
                 pill_color="#B45309",
@@ -119,7 +140,7 @@ def main() -> None:
                 title="Tasa de Retiro / Abandono",
                 value=f"{kpis.tasa_retiro:.1f}%",
                 subtitle=f"{kpis.retirados:,} abandono de ciclo",
-                accent_color="#EF4444",
+                accent_color="#DC2626",
                 pill_text="Deserción",
                 pill_bg="#FEF2F2",
                 pill_color="#B91C1C",
@@ -362,111 +383,129 @@ def main() -> None:
             )
 
     # =========================================================================
-    # PESTAÑA 4: PREGUNTAR A LOS DATOS (AGENTE INTELIGENTE)
+    # PESTAÑA 4: PREGUNTAR A LOS DATOS (AGENTE INTELIGENTE CON GROQ)
     # =========================================================================
     with tab4:
-        st.markdown("### 🤖 Agente Inteligente en Lenguaje Natural")
-        st.caption("Consulta los 4.3M de microdatos en lenguaje cotidiano con arquitectura anti-alucinación.")
+        st.markdown("### 🤖 Agente Conversacional en Lenguaje Natural")
+        st.caption(
+            "Consulta los 4.3M de microdatos en lenguaje cotidiano con arquitectura anti-alucinación (Groq + DuckDB)."
+        )
 
+        # Panel explicativo de arquitectura anti-alucinación
         st.markdown(
             """
             <div class="edu-section-card">
-                <h4>🛡️ Arquitectura Anti-Alucinación (Fase 4)</h4>
+                <h4>🛡️ Arquitectura Anti-Alucinación (Fase 4 Activa)</h4>
                 <p>
-                    A diferencia de soluciones que envían datos no estructurados al LLM, <strong>EduGuate IA</strong>
-                    opera mediante una arquitectura de dos pasos:
+                    A diferencia de soluciones que envían datos no estructurados o inventan cifras,
+                    <strong>EduGuate IA</strong> opera en 3 pasos auditables:
                 </p>
                 <ol>
-                    <li><strong>Extracción Semántica:</strong> El LLM extrae intención, filtros y métricas
-                    en un esquema JSON estructurado.</li>
-                    <li><strong>Cálculo Determinista:</strong> El motor analítico <code>DuckDB</code> ejecuta
-                    la consulta exacta sobre Parquet en &lt; 50ms.</li>
-                    <li><strong>Generación Guiada:</strong> El LLM redacta la respuesta ejecutiva limitándose
-                    exclusivamente a las cifras devueltas por DuckDB.</li>
+                    <li><strong>Extracción Semántica:</strong> Groq LLM extrae intención y filtros
+                    en JSON estructurado.</li>
+                    <li><strong>Cálculo Determinista:</strong> DuckDB ejecuta la consulta exacta
+                    sobre 4.3M de microdatos en &lt; 50ms.</li>
+                    <li><strong>Generación Guiada con Guardrails:</strong> Groq redacta la respuesta usando
+                    <em>exclusivamente</em> las cifras devueltas por DuckDB.
+                    Si no está en el censo, lo declara con honestidad.</li>
                 </ol>
             </div>
             """,
             unsafe_allow_html=True,
         )
 
-        st.markdown("#### 💬 Consultas Rápidas de Demostración")
-        st.write("Haz clic en una de las preguntas de ejemplo o ingresa tu propia consulta:")
-
-        sample_questions = [
+        # Preguntas sugeridas
+        st.markdown("#### 💡 Preguntas Rápidas Sugeridas")
+        suggested_queries = [
+            "¿Cuántos estudiantes inscritos hay en Quetzaltenango en primaria?",
+            "¿Cuáles son las diferencias de tasas de promoción y retiro entre el área rural y urbana?",
             "¿Cuál es el departamento con mayor tasa de deserción escolar?",
-            "¿Cuántos estudiantes inscritos hay en el sector rural de Quetzaltenango?",
-            "¿Qué nivel educativo presenta la menor tasa de aprobación?",
-            "¿Cómo se compara la promoción entre hombres y mujeres a nivel nacional?",
+            "¿Cuánto dinero gana un maestro de primaria en Guatemala? (Prueba Anti-Alucinación)",
         ]
 
-        cols = st.columns(2)
-        for i, q in enumerate(sample_questions):
-            with cols[i % 2]:
-                if st.button(f"🔍 {q}", key=f"q_{i}", use_container_width=True):
-                    st.session_state["query_input"] = q
+        q_cols = st.columns(2)
+        for idx, q_text in enumerate(suggested_queries):
+            with q_cols[idx % 2]:
+                if st.button(f"💬 {q_text}", key=f"btn_sug_{idx}", use_container_width=True):
+                    st.session_state["pending_prompt"] = q_text
 
-        user_query = st.text_input(
-            "Escribe tu pregunta sobre la educación formal en Guatemala 2024:",
-            value=st.session_state.get("query_input", ""),
-            placeholder="Ejemplo: ¿Cuál es la tasa de deserción en Quetzaltenango en nivel diversificado?",
-        )
+        st.markdown("---")
 
-        if user_query:
-            st.markdown(f"**Analizando:** *{user_query}*")
+        # Inicialización del historial de chat
+        if "chat_messages" not in st.session_state:
+            st.session_state["chat_messages"] = [
+                {
+                    "role": "assistant",
+                    "content": (
+                        "¡Hola! 👋 Soy **EduGuate IA**, tu asistente inteligente para la Educación Formal.\n\n"
+                        "Puedo responder preguntas sobre los **4,298,887 microdatos** del Censo 2024 o explicar los "
+                        "hallazgos y conclusiones de las gráficas del dashboard. ¿Qué deseas consultar?"
+                    ),
+                    "badge": "🛡️ Modelo Anti-Alucinación Activo",
+                    "details": None,
+                }
+            ]
 
-            # Demostración interactiva determinista previa a la integración con API LLM
-            q_lower = user_query.lower()
+        # Renderizar historial de mensajes
+        for msg in st.session_state["chat_messages"]:
+            with st.chat_message(msg["role"]):
+                st.markdown(msg["content"])
+                if msg.get("badge"):
+                    st.caption(msg["badge"])
+                if msg.get("details"):
+                    with st.expander("🔍 Ver auditoría técnica de la consulta (DuckDB + JSON)"):
+                        st.json(msg["details"])
 
-            if "deserción" in q_lower or "retiro" in q_lower or "abandono" in q_lower:
-                df_crit = engine.get_department_ranking(metric="tasa_retiro")
-                top_crit = df_crit.row(0, named=True)
-                st.success(
-                    f"🎯 **Respuesta Verificada con DuckDB:**\n\n"
-                    f"El departamento con mayor tasa de retiro escolar en 2024 es **{top_crit['departamento']}** "
-                    f"con una tasa de abandono de **{top_crit['tasa_retiro']:.1f}%** "
-                    f"({top_crit['retirados']:,} estudiantes retirados), "
-                    f"sobre un universo terminal de {top_crit['denominador_terminal']:,} evaluados."
-                )
-            elif "quetzaltenango" in q_lower and "rural" in q_lower:
-                k_xela_rural = engine.get_kpis({"departamento": "Quetzaltenango", "area": "Rural"})
-                st.success(
-                    f"🎯 **Respuesta Verificada con DuckDB:**\n\n"
-                    f"En el departamento de **Quetzaltenango**, en el **área Rural**, se registraron "
-                    f"**{k_xela_rural.matricula_total:,} estudiantes matriculados** en 2024. "
-                    f"De ellos, la tasa de promoción fue del **{k_xela_rural.tasa_promocion:.1f}%** "
-                    f"({k_xela_rural.promovidos:,} aprobados) y una deserción del **{k_xela_rural.tasa_retiro:.1f}%**."
-                )
-            elif "aprobación" in q_lower or "menor" in q_lower or "nivel" in q_lower:
-                df_niv = engine.get_breakdown_by_dimension("nivel", sort_by="tasa_promocion", ascending=True)
-                menor_niv = df_niv.row(0, named=True)
-                st.success(
-                    f"🎯 **Respuesta Verificada con DuckDB:**\n\n"
-                    f"El nivel educativo con menor tasa de aprobación es **{menor_niv['nivel']}**, "
-                    f"con un **{menor_niv['tasa_promocion']:.1f}% de promoción** "
-                    f"({menor_niv['no_promovidos']:,} estudiantes no promovidos "
-                    f"y {menor_niv['retirados']:,} retirados)."
-                )
-            elif "mujeres" in q_lower or "hombres" in q_lower or "género" in q_lower:
-                df_sex = engine.get_breakdown_by_dimension("sexo")
-                t_fem = df_sex.filter(df_sex["sexo"] == "Mujer")["tasa_promocion"][0]
-                t_masc = df_sex.filter(df_sex["sexo"] == "Hombre")["tasa_promocion"][0]
-                st.success(
-                    f"🎯 **Respuesta Verificada con DuckDB:**\n\n"
-                    f"A nivel nacional, las estudiantes mujeres registraron una tasa de promoción de "
-                    f"**{t_fem:.1f}%**, frente a un **{t_masc:.1f}%** en los hombres, "
-                    f"mostrando un diferencial positivo a favor de las estudiantes."
-                )
-            else:
-                # Consulta genérica con KPIs del contexto
-                k_res = engine.get_kpis(filters)
-                st.info(
-                    f"📊 **Resumen analítico obtenido en tiempo real:**\n\n"
-                    f"{explain_kpis(k_res)}\n\n"
-                    f"*(Nota: En la Fase 4 se activará el intérprete LLM completo "
-                    f"con esquemas JSON dinámicos para cualquier combinación de preguntas complejas.)*"
-                )
+        # Input de chat interactivo
+        chat_prompt = st.chat_input("Escribe tu pregunta sobre los datos o el análisis educativo...")
 
-    # 6. Renderizado de pie de página
+        # Atender entrada pendiente de botones rápidos si existe
+        if not chat_prompt and "pending_prompt" in st.session_state:
+            chat_prompt = st.session_state.pop("pending_prompt")
+
+        if chat_prompt:
+            # 1. Registrar mensaje del usuario
+            st.session_state["chat_messages"].append({"role": "user", "content": chat_prompt})
+            with st.chat_message("user"):
+                st.markdown(chat_prompt)
+
+            # 2. Generar respuesta con el agente
+            with st.chat_message("assistant"):
+                with st.spinner("Consultando DuckDB y generando respuesta verificada con Groq..."):
+                    agent_res = agent.ask(chat_prompt)
+
+                st.markdown(agent_res.texto)
+                badge_txt = (
+                    f"🛡️ Cifras calculadas con DuckDB | Latencia: {agent_res.latencia_ms} ms | Modo: {agent_res.modo_ia}"
+                )
+                st.caption(badge_txt)
+
+                with st.expander("🔍 Ver auditoría técnica de la consulta (DuckDB + JSON)"):
+                    st.json(
+                        {
+                            "categoria": agent_res.categoria.value,
+                            "cifras_calculadas": agent_res.cifras_calculadas,
+                            "latencia_ms": agent_res.latencia_ms,
+                            "fuentes": agent_res.fuente_datos,
+                        }
+                    )
+
+            # 3. Guardar en historial
+            st.session_state["chat_messages"].append(
+                {
+                    "role": "assistant",
+                    "content": agent_res.texto,
+                    "badge": badge_txt,
+                    "details": {
+                        "categoria": agent_res.categoria.value,
+                        "cifras_calculadas": agent_res.cifras_calculadas,
+                        "latencia_ms": agent_res.latencia_ms,
+                        "fuentes": agent_res.fuente_datos,
+                    },
+                }
+            )
+
+    # 7. Renderizado de pie de página
     render_footer()
 
 

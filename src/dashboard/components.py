@@ -1,7 +1,7 @@
 """Componentes de interfaz de usuario reutilizables y estilos CSS para el Dashboard EduGuate IA.
 
 Provee tarjetas KPI de alta fidelidad estética, contenedores de análisis narrativo
-interpretativo y filtros dinámicos sincronizados con el motor DuckDB, con contraste y legibilidad optimizados.
+interpretativo, modal de bienvenida interactivo y filtros dinámicos sincronizados con DuckDB.
 """
 
 from __future__ import annotations
@@ -21,8 +21,10 @@ def inject_custom_css() -> None:
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
         /* Tipografía base y contraste general */
-        html, body, [class*="css"] {
+        html, body, [class*="css"], .stApp {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #F8FAFC !important;
+            color: #0F172A !important;
         }
 
         /* Forzar legibilidad nítida en textos principales */
@@ -39,6 +41,23 @@ def inject_custom_css() -> None:
             color: #0F172A !important;
             font-weight: 750 !important;
             letter-spacing: -0.015em;
+        }
+
+        /* Banner de Contexto y Referencia de Usuario */
+        .edu-reference-banner {
+            background: #EFF6FF !important;
+            border: 1px solid #BFDBFE !important;
+            border-left: 5px solid #2563EB !important;
+            border-radius: 10px;
+            padding: 0.85rem 1.2rem;
+            margin-bottom: 1.2rem;
+            font-size: 0.95rem;
+            color: #1E3A8A !important;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.5rem;
         }
 
         /* Captions más legibles y nítidos */
@@ -62,7 +81,7 @@ def inject_custom_css() -> None:
             padding: 2.2rem 2.5rem;
             border-radius: 16px;
             color: #FFFFFF !important;
-            margin-bottom: 2rem;
+            margin-bottom: 1.5rem;
             box-shadow: 0 10px 25px -5px rgba(30, 58, 138, 0.25), 0 8px 10px -6px rgba(30, 58, 138, 0.2);
         }
         .edu-hero h1 {
@@ -302,6 +321,184 @@ def render_header() -> None:
     )
 
 
+def render_reference_banner(user_role: str | None, filters: dict[str, Any]) -> None:
+    """Muestra un banner cuando hay una referencia o perfil de audiencia configurado."""
+    if not user_role or user_role == "General":
+        return
+
+    detalles: list[str] = []
+    if "departamento" in filters:
+        detalles.append(f"Departamento: <strong>{filters['departamento']}</strong>")
+    if "municipio" in filters:
+        detalles.append(f"Municipio: <strong>{filters['municipio']}</strong>")
+    if "nivel" in filters:
+        detalles.append(f"Nivel: <strong>{filters['nivel']}</strong>")
+    if "sector" in filters:
+        detalles.append(f"Sector: <strong>{filters['sector']}</strong>")
+
+    detalles_str = " | ".join(detalles) if detalles else "Ámbito Nacional Completo"
+
+    st.markdown(
+        f"""
+        <div class="edu-reference-banner">
+            <div>
+                <span>🎯 <strong>Perfil de Audiencia Activo:</strong> {user_role}</span>
+                <span style="margin-left: 0.8rem; color: #1E3A8A;">({detalles_str})</span>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+@st.dialog("🇬🇹 Bienvenido a EduGuate IA — Selección de Inicio", width="large")
+def render_welcome_modal(engine: AnalyticsEngine) -> None:
+    """Modal de bienvenida inicial con 2 rutas: configurar referencia o ver el dashboard general."""
+    mode = st.session_state.get("welcome_step", "choose")
+
+    if mode == "choose":
+        st.markdown(
+            """
+            <div style="text-align: center; margin-bottom: 1.5rem;">
+                <h2 style="color: #1E3A8A; font-size: 1.5rem; font-weight: 850; margin-bottom: 0.3rem;">
+                    ¿Cómo deseas iniciar tu experiencia?
+                </h2>
+                <p style="color: #334155; font-size: 1rem;">
+                    Selecciona una de las dos modalidades para comenzar a explorar los 4.3 millones de microdatos:
+                </p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.markdown(
+                """
+                <div style="background: #EFF6FF; border: 2px solid #3B82F6; border-radius: 14px;
+                            padding: 1.4rem; height: 100%;">
+                    <div style="font-size: 2rem; margin-bottom: 0.4rem;">🎯</div>
+                    <h3 style="color: #1D4ED8; font-size: 1.15rem; font-weight: 800; margin-bottom: 0.4rem;">
+                        Configurar Audiencia y Referencia
+                    </h3>
+                    <p style="color: #1E293B; font-size: 0.92rem; line-height: 1.5;">
+                        Define para quién estás preparando la información (autoridades, docentes, periodistas o
+                        ciudadanía) y preselecciona un territorio o nivel prioritario.
+                    </p>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+            st.write("")
+            if st.button(
+                "⚙️ Configurar mi Referencia",
+                key="btn_modal_config",
+                type="primary",
+                use_container_width=True,
+            ):
+                st.session_state["welcome_step"] = "configure"
+                st.rerun()
+
+        with col2:
+            st.markdown(
+                """
+                <div style="background: #F8FAFC; border: 2px solid #CBD5E1; border-radius: 14px;
+                            padding: 1.4rem; height: 100%;">
+                    <div style="font-size: 2rem; margin-bottom: 0.4rem;">🏛️</div>
+                    <h3 style="color: #0F172A; font-size: 1.15rem; font-weight: 800; margin-bottom: 0.4rem;">
+                        Ver lo que ya se tiene (Dashboard Directo)
+                    </h3>
+                    <p style="color: #1E293B; font-size: 0.92rem; line-height: 1.5;">
+                        Accede de inmediato al panorama nacional completo de 4,298,887 estudiantes,
+                        rankings de los 22 departamentos, desglose por nivel y análisis de brechas.
+                    </p>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+            st.write("")
+            if st.button("📊 Explorar Dashboard General", key="btn_modal_explore", use_container_width=True):
+                st.session_state["show_welcome_dialog"] = False
+                st.session_state["welcome_step"] = "choose"
+                st.session_state["user_role"] = "General"
+                st.rerun()
+
+    elif mode == "configure":
+        st.markdown("### 🎯 Configuración de Audiencia y Datos de Referencia")
+        st.caption("Estos datos básicos sirven como referencia para adaptar el contexto y enfocar el análisis.")
+
+        role_options = [
+            "🏛️ Autoridad Educativa / Ministerio / Política Pública",
+            "🏫 Director de Escuela / Equipo Docente",
+            "📰 Periodista / Investigador Académico",
+            "👥 Padre de Familia / Organización Ciudadana",
+            "📊 Analista de Datos / Especialista en Políticas",
+        ]
+        selected_role = st.selectbox(
+            "1. ¿A quién le mostrarás o para quién analizas los datos?",
+            options=role_options,
+            index=0,
+        )
+
+        deptos = ["Todos los Departamentos (Nivel Nacional)"] + engine.get_departments_list()
+        selected_depto = st.selectbox("2. Departamento de referencia inicial:", options=deptos, index=0)
+
+        if selected_depto != "Todos los Departamentos (Nivel Nacional)":
+            mupios = ["Todos los Municipios"] + engine.get_municipalities_list(departamento=selected_depto)
+            selected_mupio = st.selectbox("Municipio de referencia (opcional):", options=mupios, index=0)
+        else:
+            selected_mupio = "Todos los Municipios"
+
+        niveles = ["Todos los Niveles Educativos"] + engine.get_unique_values("nivel")
+        selected_nivel = st.selectbox("3. Nivel educativo prioritario:", options=niveles, index=0)
+
+        sectores = ["Todos los Sectores"] + engine.get_unique_values("sector")
+        selected_sector = st.selectbox("4. Sector institucional prioritario:", options=sectores, index=0)
+
+        st.markdown("---")
+        b_col1, b_col2 = st.columns([1.5, 1])
+
+        with b_col1:
+            if st.button(
+                "🚀 Aplicar Referencia y Ver Datos",
+                key="btn_apply_ref",
+                type="primary",
+                use_container_width=True,
+            ):
+                st.session_state["user_role"] = selected_role
+                st.session_state["show_welcome_dialog"] = False
+                st.session_state["welcome_step"] = "choose"
+
+                # Guardar valores de presets para que el sidebar los adopte
+                if selected_depto != "Todos los Departamentos (Nivel Nacional)":
+                    st.session_state["preset_depto"] = selected_depto
+                else:
+                    st.session_state["preset_depto"] = "Todos"
+
+                if selected_mupio != "Todos los Municipios":
+                    st.session_state["preset_mupio"] = selected_mupio
+                else:
+                    st.session_state["preset_mupio"] = "Todos"
+
+                if selected_nivel != "Todos los Niveles Educativos":
+                    st.session_state["preset_nivel"] = selected_nivel
+                else:
+                    st.session_state["preset_nivel"] = "Todos"
+
+                if selected_sector != "Todos los Sectores":
+                    st.session_state["preset_sector"] = selected_sector
+                else:
+                    st.session_state["preset_sector"] = "Todos"
+
+                st.rerun()
+
+        with b_col2:
+            if st.button("⬅️ Volver a opciones", key="btn_back_modal", use_container_width=True):
+                st.session_state["welcome_step"] = "choose"
+                st.rerun()
+
+
 def render_kpi_card(
     title: str,
     value: str,
@@ -353,23 +550,37 @@ def render_sidebar_filters(engine: AnalyticsEngine) -> dict[str, Any]:
     st.sidebar.markdown("### 🎛️ Filtros Globales")
     st.sidebar.caption("Segmenta los 4.3M de registros en tiempo real.")
 
-    # 1. Departamento
+    # Botón para reabrir el modal de referencia en cualquier momento
+    if st.sidebar.button("🎯 Cambiar Referencia / Audiencia", use_container_width=True):
+        st.session_state["show_welcome_dialog"] = True
+        st.session_state["welcome_step"] = "choose"
+        st.rerun()
+
+    st.sidebar.markdown("---")
+
+    # 1. Departamento con soporte a preset
     deptos = ["Todos"] + engine.get_departments_list()
+    preset_depto = st.session_state.get("preset_depto", "Todos")
+    depto_idx = deptos.index(preset_depto) if preset_depto in deptos else 0
+
     selected_depto = st.sidebar.selectbox(
         "Departamento:",
         options=deptos,
-        index=0,
+        index=depto_idx,
         help="Filtra por cualquiera de los 22 departamentos de Guatemala.",
     )
 
-    # 2. Municipio (filtrado dinámico si hay depto seleccionado)
+    # 2. Municipio con soporte a preset
     mupios = ["Todos"] + engine.get_municipalities_list(
         departamento=selected_depto if selected_depto != "Todos" else None
     )
+    preset_mupio = st.session_state.get("preset_mupio", "Todos")
+    mupio_idx = mupios.index(preset_mupio) if preset_mupio in mupios else 0
+
     selected_mupio = st.sidebar.selectbox(
         "Municipio:",
         options=mupios,
-        index=0,
+        index=mupio_idx,
         disabled=(selected_depto == "Todos"),
         help="Selecciona un departamento primero para filtrar por municipio específico.",
     )
@@ -377,13 +588,17 @@ def render_sidebar_filters(engine: AnalyticsEngine) -> dict[str, Any]:
     st.sidebar.markdown("---")
     st.sidebar.markdown("#### 🎯 Dimensiones Educativas")
 
-    # 3. Nivel
+    # 3. Nivel con soporte a preset
     niveles = ["Todos"] + engine.get_unique_values("nivel")
-    selected_nivel = st.sidebar.selectbox("Nivel Educativo:", options=niveles, index=0)
+    preset_nivel = st.session_state.get("preset_nivel", "Todos")
+    nivel_idx = niveles.index(preset_nivel) if preset_nivel in niveles else 0
+    selected_nivel = st.sidebar.selectbox("Nivel Educativo:", options=niveles, index=nivel_idx)
 
-    # 4. Sector
+    # 4. Sector con soporte a preset
     sectores = ["Todos"] + engine.get_unique_values("sector")
-    selected_sector = st.sidebar.selectbox("Sector:", options=sectores, index=0)
+    preset_sector = st.session_state.get("preset_sector", "Todos")
+    sector_idx = sectores.index(preset_sector) if preset_sector in sectores else 0
+    selected_sector = st.sidebar.selectbox("Sector:", options=sectores, index=sector_idx)
 
     # 5. Área
     areas = ["Todos"] + engine.get_unique_values("area")
@@ -396,6 +611,10 @@ def render_sidebar_filters(engine: AnalyticsEngine) -> dict[str, Any]:
     # Botón para limpiar filtros
     st.sidebar.markdown("---")
     if st.sidebar.button("🔄 Restablecer Filtros", use_container_width=True):
+        st.session_state.pop("preset_depto", None)
+        st.session_state.pop("preset_mupio", None)
+        st.session_state.pop("preset_nivel", None)
+        st.session_state.pop("preset_sector", None)
         st.rerun()
 
     # Información de arquitectura en el footer del sidebar
