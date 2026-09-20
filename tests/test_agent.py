@@ -14,6 +14,7 @@ from tests.test_indicators import write_tiny_parquet
 @pytest.fixture
 def demo_agent(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> AnalyticsService:
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.setenv("ENABLE_WREN", "false")
     parquet = write_tiny_parquet(tmp_path / "tiny.parquet")
     service = AnalyticsService(str(parquet.resolve().as_posix()))
     get_analytics.cache_clear()
@@ -50,3 +51,29 @@ def test_ambiguous_best_department(demo_agent: AnalyticsService) -> None:
     payload = ask("¿Cuál es el mejor departamento?")
     assert payload["status"] == "clarify"
     assert payload["result"] is None
+
+
+def test_followup_keeps_context_and_changes_grouping(demo_agent: AnalyticsService) -> None:
+    first = ask("¿Cuántas inscripciones hay en Quetzaltenango?")
+    history = [
+        {"role": "user", "content": "¿Cuántas inscripciones hay en Quetzaltenango?"},
+        {"role": "assistant", "content": first},
+    ]
+    followup = ask("¿Y cómo se ve por municipio?", history=history)
+    assert followup["status"] == "ok"
+    assert followup["query"]["group_by"] == "municipality"
+    assert followup["query"]["filters"]["department"] == "Quetzaltenango"
+
+
+def test_public_answer_explains_rate_per_hundred(demo_agent: AnalyticsService) -> None:
+    payload = ask("¿Cuál es la tasa de retiro en Quetzaltenango?", audience="Público general")
+    assert "de cada 100" in payload["answer"]
+    assert payload["related_questions"]
+
+
+def test_conceptual_question_gets_plain_language_answer(demo_agent: AnalyticsService) -> None:
+    payload = ask("¿Qué significa la tasa de retiro?")
+    assert payload["status"] == "ok"
+    assert payload["query"] is None
+    assert "por cada 100" in payload["answer"]
+    assert "No incluye Vigente ni Ignorado" in payload["answer"]

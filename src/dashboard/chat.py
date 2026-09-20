@@ -6,8 +6,9 @@ from typing import Any
 
 import streamlit as st
 
+from src.analytics.narratives import METRIC_LABELS
 from src.dashboard.charts import bars_from_result
-from src.dashboard.layout import active_filters_text, result_get, show_error, to_mapping
+from src.dashboard.layout import active_filters_text, denominator_caption, result_get, show_error, to_mapping
 
 
 def _load_ask():
@@ -21,7 +22,11 @@ def _load_ask():
     return ask, None
 
 
-def _render_answer(payload: Any) -> None:
+def _queue_question(question: str) -> None:
+    st.session_state["chat_pending_question"] = question
+
+
+def _render_answer(payload: Any, message_index: int = 0) -> None:
     if payload is None:
         st.warning("El agente no devolvió respuesta.")
         return
@@ -51,7 +56,7 @@ def _render_answer(payload: Any) -> None:
         unit = result_get(result, "unit", default=None)
     meta_bits = []
     if metric:
-        meta_bits.append(f"Métrica: `{metric}`")
+        meta_bits.append(f"Indicador: {METRIC_LABELS.get(str(metric), metric)}")
     if value is not None:
         unit_txt = f" {unit}" if unit else ""
         meta_bits.append(f"Valor: {value}{unit_txt}")
@@ -59,6 +64,16 @@ def _render_answer(payload: Any) -> None:
         st.caption(" · ".join(meta_bits))
     if used_filters:
         st.caption(active_filters_text(used_filters if isinstance(used_filters, dict) else to_mapping(used_filters)))
+    provider = result_get(payload, "provider", default=None)
+    if provider:
+        st.caption(f"Motor de respuesta: {provider}.")
+    if result:
+        with st.expander("¿Cómo se calculó y qué significa?"):
+            st.write(denominator_caption(result))
+            st.write(
+                "Cada registro representa una inscripción del ciclo 2024, no necesariamente una persona única. "
+                "Una diferencia describe los datos observados, pero no demuestra por qué ocurrió."
+            )
     rows = result_get(result, "rows", default=[])
     if rows:
         st.plotly_chart(
@@ -67,19 +82,32 @@ def _render_answer(payload: Any) -> None:
         )
         with st.expander("Ver datos y trazabilidad"):
             st.dataframe(rows, width="stretch", hide_index=True)
+    related = result_get(payload, "related_questions", default=[])
+    if related:
+        st.caption("Puedes continuar preguntando:")
+        columns = st.columns(min(3, len(related)))
+        for index, question in enumerate(related):
+            columns[index % len(columns)].button(
+                question,
+                key=f"followup_{message_index}_{index}",
+                on_click=_queue_question,
+                args=(question,),
+                width="stretch",
+            )
 
 
 def render_chat(filters: dict[str, str], audience: str = "Público general") -> None:
     st.subheader("Preguntar a los datos")
     st.write(
-        "Escriba en español. El agente interpreta la pregunta, pide el cálculo a la misma capa "
-        "analítica del dashboard y explica el resultado. No genera SQL libre."
+        "Pregunta como hablarías con una persona: puedes pedir una cifra, preguntar qué significa, "
+        "solicitar una explicación sencilla o continuar con «¿y por municipio?»."
     )
     st.caption(active_filters_text(filters))
     st.caption(f"Perfil de explicación: **{audience}**.")
     st.info(
-        "Los filtros del menú izquierdo se envían como contexto (`extra_filters`). "
-        "Si no hay clave de API, el backend puede responder en modo demostración."
+        "El asistente recuerda la conversación y respeta los filtros del menú. WrenAI consulta la capa "
+        "semántica y DuckDB verifica las cifras; si no hay modelo de lenguaje, las preguntas frecuentes "
+        "siguen funcionando localmente."
     )
 
     ask, err = _load_ask()
@@ -100,16 +128,26 @@ def render_chat(filters: dict[str, str], audience: str = "Público general") -> 
         "¿Cómo se distribuyen las inscripciones por sector?",
     )
     with st.expander("Preguntas sugeridas", expanded=not st.session_state.chat_messages):
-        st.write(" · ".join(suggestions))
+        columns = st.columns(2)
+        for index, question in enumerate(suggestions):
+            columns[index % 2].button(
+                question,
+                key=f"suggestion_{index}",
+                on_click=_queue_question,
+                args=(question,),
+                width="stretch",
+            )
 
-    for item in st.session_state.chat_messages:
+    for message_index, item in enumerate(st.session_state.chat_messages):
         with st.chat_message(item["role"]):
             if item["role"] == "assistant":
-                _render_answer(item["content"])
+                _render_answer(item["content"], message_index)
             else:
                 st.markdown(item["content"])
 
-    prompt = st.chat_input("Ejemplo: ¿Cuál es la tasa de retiro en Quetzaltenango?")
+    prompt = st.session_state.pop("chat_pending_question", None)
+    typed_prompt = st.chat_input("Pregunta y continúa la conversación…")
+    prompt = typed_prompt or prompt
     if not prompt:
         return
 
@@ -121,7 +159,12 @@ def render_chat(filters: dict[str, str], audience: str = "Público general") -> 
         try:
             with st.spinner("Consultando indicadores…"):
                 try:
-                    response = ask(prompt, extra_filters=filters)
+                    response = ask(
+                        prompt,
+                        extra_filters=filters,
+                        history=st.session_state.chat_messages[:-1],
+                        audience=audience,
+                    )
                 except TypeError:
                     response = ask(prompt, filters)
         except Exception as exc:  # noqa: BLE001
@@ -130,5 +173,5 @@ def render_chat(filters: dict[str, str], audience: str = "Público general") -> 
                 {"role": "assistant", "content": f"Error: {exc}"}
             )
             return
-        _render_answer(response)
+        _render_answer(response, len(st.session_state.chat_messages))
         st.session_state.chat_messages.append({"role": "assistant", "content": response})

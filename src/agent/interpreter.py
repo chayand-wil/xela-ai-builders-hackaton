@@ -78,9 +78,33 @@ def _find_values(text: str, key: str) -> list[str]:
     return found
 
 
-def interpret_demo(question: str) -> AgentQuery:
+def interpret_demo(question: str, previous_query: AgentQuery | None = None) -> AgentQuery:
     """Modo demo: cubre el banco de preguntas del plan sin llamar a la API."""
     text = fold(question)
+    if previous_query is not None:
+        if re.search(r"\b(mas detalle|más detalle|explica|facil|fácil|denominador|metodologia|metodología)\b", text):
+            return previous_query
+        followup_groups = {
+            "municip": "municipality",
+            "departamento": "department",
+            "sector": "sector",
+            "nivel": "level",
+            "area": "area",
+            "sexo": "sex",
+            "jornada": "shift",
+        }
+        followup_text = text.lstrip("¿¡ ")
+        if followup_text.startswith(("y ", "ahora ", "tambien ", "también ")):
+            for word, group in followup_groups.items():
+                if word in text:
+                    metric = previous_query.metric
+                    rank_metric = previous_query.rank_metric
+                    if metric not in {"distribution", "ranking"}:
+                        rank_metric = metric
+                        metric = "ranking" if "mayor" in text or "mas" in text else "distribution"
+                    return previous_query.model_copy(
+                        update={"metric": metric, "group_by": group, "rank_metric": rank_metric}
+                    )
     departments = _find_values(text, "department")
     levels = _find_values(text, "level")
     sectors = _find_values(text, "sector")
@@ -216,10 +240,10 @@ def interpret_openai(question: str) -> AgentQuery:
     return AgentQuery.model_validate(payload)
 
 
-def interpret(question: str) -> AgentQuery:
+def interpret(question: str, previous_query: AgentQuery | None = None) -> AgentQuery:
     if _openai_enabled():
         try:
             return interpret_openai(question)
         except Exception:
-            return interpret_demo(question)
-    return interpret_demo(question)
+            return interpret_demo(question, previous_query)
+    return interpret_demo(question, previous_query)
