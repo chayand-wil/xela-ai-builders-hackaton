@@ -8,7 +8,14 @@ import streamlit as st
 
 from src.analytics.narratives import METRIC_LABELS
 from src.dashboard.charts import bars_from_result
-from src.dashboard.layout import active_filters_text, denominator_caption, result_get, show_error, to_mapping
+from src.dashboard.layout import (
+    active_filters_text,
+    denominator_caption,
+    format_kpi_value,
+    result_get,
+    show_error,
+    to_mapping,
+)
 
 
 def _load_ask():
@@ -76,12 +83,20 @@ def _render_answer(payload: Any, message_index: int = 0) -> None:
             )
     rows = result_get(result, "rows", default=[])
     if rows:
+        value_axis = "Porcentaje" if result_get(result, "unit", default="") == "percent" else "Inscripciones"
         st.plotly_chart(
-            bars_from_result(result, title="Resultado de la consulta", horizontal=len(rows) > 6),
+            bars_from_result(
+                result,
+                title=f"Gráfico: {METRIC_LABELS.get(str(metric), 'resultado')} por grupo",
+                horizontal=len(rows) > 6,
+                value_axis_title=value_axis,
+            ),
             width="stretch",
         )
         with st.expander("Ver datos y trazabilidad"):
             st.dataframe(rows, width="stretch", hide_index=True)
+    elif result and result_get(result, "value", default=None) is not None:
+        st.metric(METRIC_LABELS.get(str(metric), "Resultado").capitalize(), format_kpi_value(result))
     related = result_get(payload, "related_questions", default=[])
     if related:
         st.caption("Puedes continuar preguntando:")
@@ -96,14 +111,13 @@ def _render_answer(payload: Any, message_index: int = 0) -> None:
             )
 
 
-def render_chat(filters: dict[str, str], audience: str = "Público general") -> None:
-    st.subheader("Preguntar a los datos")
+def render_chat(filters: dict[str, str]) -> None:
+    st.subheader("Pregunta, compara y crea gráficos")
     st.write(
-        "Pregunta como hablarías con una persona: puedes pedir una cifra, preguntar qué significa, "
-        "solicitar una explicación sencilla o continuar con «¿y por municipio?»."
+        "Escribe lo que quieres conocer. Por ejemplo: **«Grafica la tasa de retiro por municipio "
+        "en Alta Verapaz»**. Puedes continuar con «explícamelo», «compáralo» o «dame más detalles»."
     )
     st.caption(active_filters_text(filters))
-    st.caption(f"Perfil de explicación: **{audience}**.")
     st.info(
         "El asistente recuerda la conversación y respeta los filtros del menú. WrenAI consulta la capa "
         "semántica y DuckDB verifica las cifras; si no hay modelo de lenguaje, las preguntas frecuentes "
@@ -163,7 +177,7 @@ def render_chat(filters: dict[str, str], audience: str = "Público general") -> 
                         prompt,
                         extra_filters=filters,
                         history=st.session_state.chat_messages[:-1],
-                        audience=audience,
+                        audience="Público general",
                     )
                 except TypeError:
                     response = ask(prompt, filters)

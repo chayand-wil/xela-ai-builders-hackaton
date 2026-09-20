@@ -77,3 +77,12 @@ def test_conceptual_question_gets_plain_language_answer(demo_agent: AnalyticsSer
     assert payload["query"] is None
     assert "por cada 100" in payload["answer"]
     assert "No incluye Vigente ni Ignorado" in payload["answer"]
+
+
+def test_chart_request_creates_grouped_result(demo_agent: AnalyticsService) -> None:
+    payload = ask("Grafica la tasa de retiro por municipio en Quetzaltenango")
+    assert payload["status"] == "ok"
+    assert payload["query"]["metric"] == "withdrawal_rate"
+    assert payload["query"]["group_by"] == "municipality"
+    assert payload["query"]["filters"]["department"] == "Quetzaltenango"
+    assert payload["result"]["rows"]

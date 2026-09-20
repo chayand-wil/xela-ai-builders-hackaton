@@ -128,6 +128,23 @@ def interpret_demo(question: str, previous_query: AgentQuery | None = None) -> A
     wants_repeat = bool(re.search(r"repiten", text))
     wants_count = bool(re.search(r"cuant", text) or re.search(r"inscripcion", text))
 
+    requested_group = None
+    group_words = {
+        "municip": "municipality",
+        "departamento": "department",
+        "sector": "sector",
+        "nivel": "level",
+        "area": "area",
+        "sexo": "sex",
+        "jornada": "shift",
+        "resultado": "outcome",
+    }
+    if " por " in text or "graf" in text or "muestra" in text:
+        for word, group in group_words.items():
+            if word in text:
+                requested_group = group
+                break
+
     if wants_distribution:
         group = "sector"
         if re.search(r"sexo", text):
@@ -141,6 +158,21 @@ def interpret_demo(question: str, previous_query: AgentQuery | None = None) -> A
         if departments:
             filters["department"] = departments[0]
         return AgentQuery(metric="distribution", filters=filters, group_by=group)
+
+    if requested_group and not wants_compare:
+        if departments:
+            filters["department"] = departments[0]
+        if wants_withdrawal:
+            metric = "withdrawal_rate"
+        elif wants_non_promo:
+            metric = "non_promotion_rate"
+        elif wants_promo:
+            metric = "promotion_rate"
+        elif wants_repeat:
+            metric = "repetition_rate"
+        else:
+            metric = "enrollment_count"
+        return AgentQuery(metric=metric, filters=filters, group_by=requested_group, limit=30)
 
     if wants_compare and wants_withdrawal and len(areas) >= 2:
         return AgentQuery(

@@ -52,12 +52,6 @@ def main() -> None:
         "sencilla y la información necesaria para comprobar cómo fue calculada."
     )
 
-    audience = st.sidebar.selectbox(
-        "¿Para quién es esta vista?",
-        ("Público general", "Municipalidad", "MINEDUC"),
-        help="Cambia el nivel de detalle y la forma de explicar los resultados.",
-    )
-    st.session_state["audience"] = audience
     svc, analytics_error = _load_analytics()
     options: dict = {}
     filters: dict = {}
@@ -75,17 +69,20 @@ def main() -> None:
             show_error("No se pudieron leer las opciones de filtro.", str(exc))
             svc = None
 
-    panorama, territorio, preguntar, comparar, explorar, descubrir, metodologia = st.tabs(
+    preguntar, panorama, territorio, comparar, explorar, descubrir, metodologia = st.tabs(
         [
+            "Asistente con gráficos",
             "Panorama nacional",
             "Territorio",
-            "Pregunta al asistente",
             "Comparar",
             "Explorador",
             "Descubrir",
             "Metodología",
         ]
     )
+
+    with preguntar:
+        render_chat(filters)
 
     with panorama:
         if svc is None:
@@ -98,9 +95,6 @@ def main() -> None:
             show_error(ANALYTICS_UNAVAILABLE, analytics_error)
         else:
             render_territory(svc, filters, options)
-
-    with preguntar:
-        render_chat(filters, audience)
 
     with comparar:
         if svc is None:

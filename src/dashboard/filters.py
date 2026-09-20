@@ -147,11 +147,15 @@ def render_sidebar_filters(options: dict[str, Any]) -> dict[str, str]:
         help="Si la lista no se estrecha al elegir departamento, las opciones llegaron planas desde analítica.",
     )
 
-    for key in WIDGET_KEYS:
-        if key in {"department", "municipality"}:
-            continue
-        values = [TODOS] + as_str_list(options.get(key))
-        st.sidebar.selectbox(FILTER_LABELS.get(key, key), options=values, key=f"flt_{key}")
+    level_values = [TODOS] + as_str_list(options.get("level"))
+    st.sidebar.selectbox(FILTER_LABELS["level"], options=level_values, key="flt_level")
+
+    with st.sidebar.expander("Más filtros"):
+        for key in WIDGET_KEYS:
+            if key in {"department", "municipality", "level"}:
+                continue
+            values = [TODOS] + as_str_list(options.get(key))
+            st.selectbox(FILTER_LABELS.get(key, key), options=values, key=f"flt_{key}")
 
     selected = {key: st.session_state.get(f"flt_{key}", TODOS) for key in WIDGET_KEYS}
     return build_filters(selected)
