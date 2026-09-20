@@ -1,7 +1,7 @@
 """Componentes de interfaz de usuario reutilizables y estilos CSS para el Dashboard EduGuate IA.
 
 Provee tarjetas KPI de alta fidelidad estética, contenedores de análisis narrativo
-interpretativo y filtros dinámicos sincronizados con el motor DuckDB.
+interpretativo y filtros dinámicos sincronizados con el motor DuckDB, con contraste y legibilidad optimizados.
 """
 
 from __future__ import annotations
@@ -14,15 +14,46 @@ from src.analytics.queries import AnalyticsEngine
 
 
 def inject_custom_css() -> None:
-    """Inyecta reglas CSS avanzadas para elevar el diseño visual a estándares de nivel producto."""
+    """Inyecta reglas CSS con contraste tipográfico optimizado (WCAG AAA/AA) y alta legibilidad."""
     st.markdown(
         """
         <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
-        /* Base styling */
+        /* Tipografía base y contraste general */
         html, body, [class*="css"] {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        /* Forzar legibilidad nítida en textos principales */
+        .stMarkdown p, .stMarkdown span {
+            color: #1E293B !important;
+            font-size: 0.98rem;
+            line-height: 1.6;
+        }
+        .stMarkdown strong {
+            color: #0F172A !important;
+            font-weight: 700 !important;
+        }
+        h1, h2, h3, h4, h5, h6 {
+            color: #0F172A !important;
+            font-weight: 750 !important;
+            letter-spacing: -0.015em;
+        }
+
+        /* Captions más legibles y nítidos */
+        [data-testid="stCaptionContainer"] {
+            color: #334155 !important;
+            font-size: 0.92rem !important;
+            font-weight: 500 !important;
+            margin-bottom: 0.6rem;
+        }
+
+        /* Estilos de Selectbox y Labels de Formularios */
+        .stSelectbox label, [data-testid="stWidgetLabel"] p {
+            color: #0F172A !important;
+            font-weight: 700 !important;
+            font-size: 0.92rem !important;
         }
 
         /* Hero Header */
@@ -30,22 +61,23 @@ def inject_custom_css() -> None:
             background: linear-gradient(135deg, #1E3A8A 0%, #1D4ED8 50%, #0D9488 100%);
             padding: 2.2rem 2.5rem;
             border-radius: 16px;
-            color: #FFFFFF;
+            color: #FFFFFF !important;
             margin-bottom: 2rem;
             box-shadow: 0 10px 25px -5px rgba(30, 58, 138, 0.25), 0 8px 10px -6px rgba(30, 58, 138, 0.2);
         }
         .edu-hero h1 {
             color: #FFFFFF !important;
             font-size: 2.2rem !important;
-            font-weight: 800 !important;
+            font-weight: 850 !important;
             margin-bottom: 0.4rem !important;
             letter-spacing: -0.02em;
         }
         .edu-hero p {
-            color: #E2E8F0 !important;
-            font-size: 1.05rem;
+            color: #F8FAFC !important;
+            font-size: 1.05rem !important;
+            font-weight: 450 !important;
             max-width: 850px;
-            line-height: 1.5;
+            line-height: 1.6;
             margin-bottom: 0.8rem;
         }
         .edu-badge-container {
@@ -55,26 +87,26 @@ def inject_custom_css() -> None:
             margin-top: 0.8rem;
         }
         .edu-badge {
-            background: rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.2) !important;
             backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.25);
-            padding: 0.3rem 0.85rem;
+            border: 1px solid rgba(255, 255, 255, 0.4) !important;
+            padding: 0.35rem 0.85rem;
             border-radius: 9999px;
-            font-size: 0.82rem;
-            font-weight: 600;
-            color: #FFFFFF;
+            font-size: 0.85rem;
+            font-weight: 700 !important;
+            color: #FFFFFF !important;
             display: inline-flex;
             align-items: center;
             gap: 0.35rem;
         }
 
-        /* KPI Card */
+        /* KPI Cards de Alto Contraste */
         .edu-kpi-card {
-            background: #FFFFFF;
+            background: #FFFFFF !important;
             border-radius: 14px;
-            padding: 1.25rem 1.4rem;
-            border: 1px solid #E2E8F0;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+            padding: 1.3rem 1.4rem;
+            border: 1px solid #CBD5E1 !important;
+            box-shadow: 0 4px 8px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
             transition: transform 0.15s ease, box-shadow 0.15s ease;
             position: relative;
             overflow: hidden;
@@ -82,8 +114,8 @@ def inject_custom_css() -> None:
         }
         .edu-kpi-card:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
-            border-color: #CBD5E1;
+            box-shadow: 0 10px 18px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.06);
+            border-color: #94A3B8 !important;
         }
         .edu-kpi-card::before {
             content: '';
@@ -91,118 +123,154 @@ def inject_custom_css() -> None:
             top: 0;
             left: 0;
             right: 0;
-            height: 4px;
-            background: var(--card-accent, #3B82F6);
+            height: 5px;
+            background: var(--card-accent, #2563EB);
         }
         .edu-kpi-title {
-            font-size: 0.82rem;
-            font-weight: 600;
+            font-size: 0.88rem !important;
+            font-weight: 750 !important;
             text-transform: uppercase;
             letter-spacing: 0.05em;
-            color: #64748B;
-            margin-bottom: 0.35rem;
+            color: #1E293B !important;
+            margin-bottom: 0.4rem;
         }
         .edu-kpi-value {
-            font-size: 1.85rem;
-            font-weight: 800;
-            color: #0F172A;
+            font-size: 2.1rem !important;
+            font-weight: 900 !important;
+            color: #0F172A !important;
             line-height: 1.2;
             letter-spacing: -0.02em;
         }
         .edu-kpi-sub {
-            font-size: 0.82rem;
-            color: #64748B;
-            margin-top: 0.35rem;
+            font-size: 0.88rem !important;
+            color: #334155 !important;
+            font-weight: 600 !important;
+            margin-top: 0.45rem;
             display: flex;
             align-items: center;
-            gap: 0.4rem;
+            gap: 0.5rem;
         }
         .edu-pill {
             display: inline-block;
-            padding: 0.15rem 0.5rem;
+            padding: 0.2rem 0.6rem;
             border-radius: 6px;
-            font-size: 0.75rem;
-            font-weight: 700;
+            font-size: 0.78rem !important;
+            font-weight: 800 !important;
         }
 
         /* Narrative Analysis Box (Mandatorio en Hackatón) */
         .edu-narrative-box {
-            background: linear-gradient(180deg, #F8FAFC 0%, #F1F5F9 100%);
-            border-left: 4px solid #2563EB;
+            background: #F8FAFC !important;
+            border-left: 5px solid #2563EB !important;
             border-radius: 0 12px 12px 0;
-            padding: 1.2rem 1.4rem;
+            padding: 1.25rem 1.5rem;
             margin: 1.2rem 0;
-            border-top: 1px solid #E2E8F0;
-            border-right: 1px solid #E2E8F0;
-            border-bottom: 1px solid #E2E8F0;
+            border-top: 1px solid #CBD5E1 !important;
+            border-right: 1px solid #CBD5E1 !important;
+            border-bottom: 1px solid #CBD5E1 !important;
         }
         .edu-narrative-header {
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            font-size: 0.9rem;
-            font-weight: 700;
-            color: #1E3A8A;
-            margin-bottom: 0.5rem;
+            font-size: 0.95rem !important;
+            font-weight: 800 !important;
+            color: #1E3A8A !important;
+            margin-bottom: 0.55rem;
             text-transform: uppercase;
             letter-spacing: 0.04em;
         }
         .edu-narrative-text {
-            font-size: 0.95rem;
-            line-height: 1.6;
-            color: #334155;
+            font-size: 1.02rem !important;
+            line-height: 1.68 !important;
+            color: #0F172A !important;
+            font-weight: 450 !important;
+        }
+        .edu-narrative-text strong {
+            color: #000000 !important;
+            font-weight: 800 !important;
         }
 
-        /* Alert Box */
-        .edu-alert-box {
-            background: #FEF3C7;
-            border-left: 4px solid #F59E0B;
-            border-radius: 0 10px 10px 0;
-            padding: 0.9rem 1.1rem;
-            font-size: 0.88rem;
-            color: #92400E;
-            margin: 0.8rem 0;
+        /* Streamlit Native Metrics */
+        [data-testid="stMetricValue"] {
+            color: #0F172A !important;
+            font-weight: 850 !important;
+            font-size: 1.8rem !important;
+        }
+        [data-testid="stMetricLabel"] {
+            color: #1E293B !important;
+            font-weight: 700 !important;
+            font-size: 0.92rem !important;
         }
 
-        /* Card Section Container */
+        /* Contenedores de Sección */
         .edu-section-card {
-            background: #FFFFFF;
-            border: 1px solid #E2E8F0;
+            background: #FFFFFF !important;
+            border: 1px solid #CBD5E1 !important;
             border-radius: 14px;
-            padding: 1.5rem;
+            padding: 1.6rem;
             margin-bottom: 1.5rem;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+        }
+        .edu-section-card p, .edu-section-card li {
+            color: #1E293B !important;
+            font-size: 0.98rem !important;
+            line-height: 1.6;
+        }
+        .edu-section-card strong {
+            color: #0F172A !important;
+            font-weight: 700 !important;
         }
 
-        /* Streamlit Tabs Customization */
+        /* Tabs de Streamlit */
         .stTabs [data-baseweb="tab-list"] {
             gap: 8px;
-            border-bottom: 1px solid #E2E8F0;
+            border-bottom: 2px solid #CBD5E1;
             padding-bottom: 4px;
         }
         .stTabs [data-baseweb="tab"] {
             border-radius: 8px 8px 0 0;
-            padding: 10px 18px;
-            font-weight: 600;
-            font-size: 0.95rem;
+            padding: 11px 20px;
+            font-weight: 700 !important;
+            font-size: 1rem !important;
             border: none;
-            color: #64748B;
+            color: #334155 !important;
             background-color: transparent;
         }
         .stTabs [aria-selected="true"] {
-            color: #2563EB !important;
-            border-bottom: 3px solid #2563EB !important;
-            background: #EFF6FF !important;
+            color: #1D4ED8 !important;
+            font-weight: 850 !important;
+            border-bottom: 3px solid #1D4ED8 !important;
+            background: #DBEAFE !important;
+        }
+
+        /* Sidebar Styling */
+        [data-testid="stSidebar"] {
+            background-color: #FFFFFF !important;
+            border-right: 1px solid #CBD5E1 !important;
+        }
+        [data-testid="stSidebar"] h3, [data-testid="stSidebar"] h4 {
+            color: #0F172A !important;
+            font-weight: 800 !important;
+        }
+        [data-testid="stSidebar"] [data-testid="stCaptionContainer"] {
+            color: #475569 !important;
+            font-weight: 600 !important;
         }
 
         /* Footer */
         .edu-footer {
             text-align: center;
             padding: 2.5rem 1rem 1.5rem 1rem;
-            color: #94A3B8;
-            font-size: 0.85rem;
-            border-top: 1px solid #E2E8F0;
+            color: #475569 !important;
+            font-size: 0.88rem !important;
+            font-weight: 500 !important;
+            border-top: 1px solid #CBD5E1;
             margin-top: 3rem;
+        }
+        .edu-footer strong {
+            color: #1E293B !important;
+            font-weight: 700 !important;
         }
         </style>
         """,
@@ -243,7 +311,7 @@ def render_kpi_card(
     pill_bg: str = "#EFF6FF",
     pill_color: str = "#1D4ED8",
 ) -> None:
-    """Renderiza una tarjeta KPI visualmente destacada con badges y formato enriquecido."""
+    """Renderiza una tarjeta KPI visualmente destacada con badges y formato de alto contraste."""
     pill_html = ""
     if pill_text:
         pill_html = f'<span class="edu-pill" style="background:{pill_bg}; color:{pill_color};">{pill_text}</span>'
@@ -333,8 +401,8 @@ def render_sidebar_filters(engine: AnalyticsEngine) -> dict[str, Any]:
     # Información de arquitectura en el footer del sidebar
     st.sidebar.markdown(
         """
-        <div style="font-size: 0.75rem; color: #64748B; margin-top: 2rem; line-height: 1.4;">
-            <strong>EduGuate IA v1.0</strong><br>
+        <div style="font-size: 0.8rem; color: #334155; margin-top: 2rem; line-height: 1.5;">
+            <strong style="color: #0F172A;">EduGuate IA v1.0</strong><br>
             Hackatón AI Builders GT 2024<br>
             Procesamiento: DuckDB & Polars<br>
             Dataset: 4,298,887 filas
