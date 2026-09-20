@@ -82,14 +82,26 @@ Procesa los 22 departamentos (~210 MB de Excel), aplica las reglas de limpieza y
 python scripts/process_data.py
 ```
 
-### 5. Ejecutar la suite de pruebas unitarias
+### 5. Iniciar el Dashboard Interactivo
+Ejecuta la interfaz web de análisis visual y narrativo:
 ```bash
-pytest tests/test_ingestion.py -v
+streamlit run app.py
 ```
+Abre en tu navegador `http://localhost:8501`. Cuenta con 4 pestañas interactivas:
+- **🏛️ Panorama Nacional:** KPIs oficiales, gráfico donut de resultados terminales y matrícula por nivel educativo.
+- **🗺️ Exploración Territorial:** Ranking interactivo de los 22 departamentos y drilldown a sus 340 municipios.
+- **⚖️ Brechas y Desigualdades:** Comparativas Rural vs Urbana, Público vs Privado, Sexo y Pueblos Originarios.
+- **🤖 Preguntar a los Datos:** Demostración y arquitectura anti-alucinación para consultas en lenguaje natural.
 
-### 6. Ejecutar el linter y formateador de código
+### 6. Ejecutar la suite de pruebas unitarias
 ```bash
-ruff check src/ tests/ scripts/
+pytest tests/ -v
+```
+*(20/20 pruebas unitarias aprobadas en menos de 1.5 segundos)*
+
+### 7. Ejecutar el linter y formateador de código
+```bash
+ruff check src/ tests/ app.py
 ```
 
 ---
@@ -98,6 +110,7 @@ ruff check src/ tests/ scripts/
 
 ```text
 .
+├── app.py                           # Aplicación web interactiva Streamlit
 ├── Data/
 │   ├── *.xlsx                       # 22 archivos departamentales y diccionario oficial
 │   ├── processed/
@@ -113,13 +126,22 @@ ruff check src/ tests/ scripts/
 ├── scripts/
 │   └── process_data.py              # CLI principal de ingesta, decodificación y validación
 ├── src/
-│   └── ingestion/
+│   ├── analytics/                   # Motor analítico DuckDB (< 50ms) y narrativas
+│   │   ├── indicators.py            # Fórmulas de indicadores y modelos Pydantic
+│   │   ├── narratives.py            # Generador de análisis interpretativo obligatorio
+│   │   └── queries.py               # Capa de consultas parametrizadas sobre Parquet
+│   ├── dashboard/                   # Componentes visuales y gráficos
+│   │   ├── charts.py                # Generador de gráficos interactivos Plotly
+│   │   └── components.py            # Tarjetas KPI, filtros y estilos CSS avanzados
+│   └── ingestion/                   # Pipeline ETL y normalización
 │       ├── catalogs.py              # Mapeos de códigos a etiquetas oficiales del INE
 │       ├── loader.py                # Lector robusto de hojas y validación de esquemas
 │       ├── cleaner.py               # Limpieza, normalización (00-) y derivación territorial
 │       └── validation.py            # Verificación contra Ground Truth oficial
 ├── tests/
-│   └── test_ingestion.py            # Pruebas unitarias automatizadas (pytest)
+│   ├── test_analytics.py            # Pruebas del motor analítico y narrativas
+│   ├── test_dashboard.py            # Pruebas de componentes visuales y gráficos
+│   └── test_ingestion.py            # Pruebas de limpieza y decodificación
 ├── pyproject.toml                   # Configuración del paquete y herramientas
 ├── requirements.txt                 # Lista reproducible de dependencias
 ├── TRACKING.md                      # Control de avances y estado de las fases del hackatón
